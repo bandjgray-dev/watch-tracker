@@ -1,288 +1,98 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watch Vault</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f8fafc; margin: 0; padding: 16px; color: #0f172a; }
-        header { display: flex; justify-content: space-between; align-items: center; background: #0f172a; color: white; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; }
-        button { background: #4f46e5; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; cursor: pointer; }
-        .card { background: white; padding: 16px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; padding: 16px; z-index: 50; }
-        .modal.active { display: flex; }
-        .modal-box { background: white; padding: 20px; border-radius: 16px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
-        input, select { width: 100%; padding: 10px; margin-top: 4px; margin-bottom: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; background: #f8fafc; }
-        label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        body { font-family: sans-serif; background: #090d16; margin: 0; padding: 16px; color: #f8fafc; }
+        header { display: flex; justify-content: space-between; align-items: center; background: #1e293b; color: white; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; border: 1px solid #334155; }
+        button { background: #6366f1; color: white; border: none; padding: 8px 14px; border-radius: 16px; font-weight: bold; font-size: 13px; cursor: pointer; }
+        .card { background: #1e293b; padding: 14px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #334155; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; padding: 16px; z-index: 50; }
+        .modal.open { display: flex; }
+        .modal-box { background: #1e293b; color: #f8fafc; padding: 18px; border-radius: 14px; width: 100%; max-width: 360px; max-height: 85vh; overflow-y: auto; border: 1px solid #334155; }
+        input, select, textarea { width: 100%; padding: 8px; margin: 4px 0 10px 0; border: 1px solid #475569; border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #0f172a; color: #f8fafc; }
+        label { font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; }
     </style>
 </head>
 <body>
-
     <header>
-        <h2 style="margin:0; font-size:1.2rem;">⌚ Watch Vault</h2>
-        <button onclick="openModal()">+ Add Watch</button>
+        <h3 style="margin:0;">⌚ Watch Vault</h3>
+        <button onclick="toggleM(true)">+ Add Watch</button>
     </header>
 
-    <div id="watchList"></div>
+    <div id="list"></div>
 
-    <!-- Modal -->
-    <div id="myModal" class="modal">
+    <div id="modal" class="modal">
         <div class="modal-box">
-            <h3 style="margin-top:0;">Add New Watch</h3>
-            <form onsubmit="saveWatch(event)">
-                <label>Brand</label>
-                <input type="text" id="brand" required placeholder="e.g. Rolex">
-                
-                <label>Model</label>
-                <input type="text" id="model" required placeholder="e.g. Submariner">
-                
+            <h3 style="margin-top:0;">Add Watch</h3>
+            <form onsubmit="saveW(event)">
+                                <label>Brand</label><input type="text" id="brand" required placeholder="Rolex">
+                <label>Model</label><input type="text" id="model" required placeholder="Submariner">
                 <label>Category</label>
-                <select id="category">
-                    <option value="Diver">Diver</option>
-                    <option value="Dress">Dress</option>
-                    <option value="Chronograph">Chronograph</option>
-                    <option value="Field">Field</option>
+                <select id="cat">
+                    <option>Diver</option><option>Dress</option><option>Chronograph</option><option>Field</option><option>Vintage</option>
                 </select>
-
-                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
-                    <button type="button" onclick="closeModal()" style="background:#64748b;">Cancel</button>
-                    <button type="submit">Save Watch</button>
+                <label>Est. Value ($)</label><input type="number" id="val">
+                <label>Movement</label><input type="text" id="mov" placeholder="Automatic">
+                <label>Serial No.</label><input type="text" id="sn">
+                <label>Notes</label><textarea id="notes" rows="2"></textarea>
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+                    <button type="button" onclick="toggleM(false)" style="background:#475569;">Cancel</button>
+                    <button type="submit">Save</button>
                 </div>
             </form>
         </div>
     </div>
-
-    <script>
-        let watches = JSON.parse(localStorage.getItem('watches') || '[]');
-
-        function openModal() {
-            document.getElementById('myModal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('myModal').classList.remove('active');
-        }
-
-        function saveWatch(e) {
+        <script>
+        var W = JSON.parse(localStorage.getItem('W') || '[]');
+        function toggleM(o) { document.getElementById('modal').className = o ? 'modal open' : 'modal'; }
+        function saveW(e) {
             e.preventDefault();
-            const brand = document.getElementById('brand').value;
-            const model = document.getElementById('model').value;
-            const category = document.getElementById('category').value;
-
-            watches.push({ id: Date.now(), brand, model, category });
-            localStorage.setItem('watches', JSON.stringify(watches));
-            
-            document.getElementById('brand').value = '';
-            document.getElementById('model').value = '';
-            closeModal();
+            W.push({
+                id: Date.now(),
+                b: document.getElementById('brand').value,
+                m: document.getElementById('model').value,
+                c: document.getElementById('cat').value,
+                v: document.getElementById('val').value,
+                mov: document.getElementById('mov').value,
+                sn: document.getElementById('sn').value,
+                n: document.getElementById('notes').value
+            });
+            localStorage.setItem('W', JSON.stringify(W));
+            e.target.reset();
+            toggleM(false);
             render();
         }
-
-        function deleteWatch(id) {
-            if (confirm("Delete this watch?")) {
-                watches = watches.filter(w => w.id !== id);
-                localStorage.setItem('watches', JSON.stringify(watches));
-                render();
-            }
+                    function delW(id) {
+            if(confirm("Delete watch?")) { W = W.filter(x => x.id !== id); localStorage.setItem('W', JSON.stringify(W)); render(); }
         }
-
+        function shareW(id) {
+            var x = W.find(w => w.id === id);
+            if(!x) return;
+            var txt = "⌚ Watch Details\nBrand: " + x.b + "\nModel: " + x.m + "\nCategory: " + x.c + "\nValue: $" + (x.v || 'N/A') + "\nMovement: " + (x.mov || 'N/A') + "\nSerial: " + (x.sn || 'N/A') + "\nNotes: " + (x.n || 'None');
+            if(navigator.share) navigator.share({title: x.b + " " + x.m, text: txt});
+            else prompt("Copy details to share:", txt);
+        }
         function render() {
-            const list = document.getElementById('watchList');
-            if (watches.length === 0) {
-                list.innerHTML = '<p style="text-align:center; color:#64748b; margin-top:40px;">No watches yet. Tap "+ Add Watch" to start!</p>';
-                return;
-            }
-            list.innerHTML = watches.map(w => `
+            var el = document.getElementById('list');
+            if(!W.length) { el.innerHTML = '<p style="text-align:center; color:#94a3b8; margin-top:30px;">No watches yet. Tap "+ Add Watch" to start!</p>'; return; }
+            el.innerHTML = W.map(x => `
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <span style="font-size:11px; background:#e0e7ff; color:#3730a3; padding:2px 8px; border-radius:10px; font-weight:600;">${w.category}</span>
-                            <h3 style="margin:6px 0 2px 0; font-size:1.1rem;">${w.brand} ${w.model}</h3>
-                        </div>
-                        <button onclick="deleteWatch(${w.id})" style="background:#ef4444; padding:6px 12px; font-size:12px;">Delete</button>
+                        <span style="font-size:11px; background:#312e81; color:#c7d2fe; padding:2px 6px; border-radius:8px; font-weight:bold;">${x.c}</span>
+                        <b style="font-size:14px; color:#34d399;">$${x.v || '0'}</b>
+                    </div>
+                    <h3 style="margin:6px 0 2px 0; font-size:16px;">${x.b} ${x.m}</h3>
+                    <p style="font-size:12px; color:#94a3b8; margin:0 0 10px 0;">${x.n || 'No notes'}</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #334155; padding-top:8px;">
+                        <button onclick="shareW(${x.id})" style="background:#475569; padding:4px 10px; font-size:11px;">Share</button>
+                        <button onclick="delW(${x.id})" style="background:#ef4444; padding:4px 10px; font-size:11px;">Delete</button>
                     </div>
                 </div>
             `).join('');
         }
-
         render();
     </script>
 </body>
 </html>
-alue,
-                model: document.getElementById('model').value,
-                category: document.getElementById('
-span>Serial Number (Private by default)</span></label>
-                <label class="flex items-center space-x-3 text-sm"><input type="checkbox" id="chk_price" class="rounded text-indigo-600"><span>Purchase Price</span></label>
-                <label class="flex items-center space-x-3 text-sm"><input type="checkbox" id="chk_value" checked class="rounded text-indigo-600"><span>Current Value</span></label>
-                <label class="flex items-center space-x-3 text-sm"><input type="checkbox" id="chk_desc" checked class="rounded text-indigo-600"><span>Description</span></label>
-                <label class="flex items-center space-x-3 text-sm"><input type="checkbox" id="chk_notes" class="rounded text-indigo-600"><span>Notes on Issues</span></label>
-            </div>
-            <div class="flex justify-end space-x-3">
-                <button onclick="closeShareModal()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Cancel</button>
-                <button onclick="generateShareText()" class="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white shadow">Generate & Share</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let watches = JSON.parse(localStorage.getItem('watches') || '[]');
-        let currentFilter = 'All';
-        let currentImages = [];
-        let sharingWatchId = null;
-
-        function saveToStorage() {
-            localStorage.setItem('watches', JSON.stringify(watches));
-            renderWatches();
-        }
-
-        function filterCategory(cat) {
-            currentFilter = cat;
-            document.querySelectorAll('.category-btn').forEach(btn => {
-                if (btn.innerText === cat) {
-                    btn.className = "category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-slate-900 text-white whitespace-nowrap shadow-sm";
-                } else {
-                    btn.className = "category-btn px-4 py-1.5 rounded-full text-sm font-medium bg-white text-slate-600 border border-slate-200 whitespace-nowrap shadow-sm";
-                }
-            });
-            renderWatches();
-        }
-
-        function renderWatches() {
-            const grid = document.getElementById('watchGrid');
-            const filtered = currentFilter === 'All' ? watches : watches.filter(w => w.category === currentFilter);
-            
-            if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 text-sm">No watches found in this category. Tap '+ Add Watch' to start your collection.</div>`;
-                return;
-            }
-
-            grid.innerHTML = filtered.map(w => `
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col justify-between">
-                    <div>
-                        ${w.images && w.images.length > 0 ? `
-                            <div class="h-48 bg-slate-100 overflow-hidden relative">
-                                <img src="${w.images[0]}" class="w-full h-full object-cover">
-                                ${w.images.length > 1 ? `<span class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full">+${w.images.length - 1} more</span>` : ''}
-                            </div>
-                        ` : `<div class="h-32 bg-slate-100 flex items-center justify-center text-slate-400 text-xs font-medium">No Image</div>`}
-                        <div class="p-4">
-                            <div class="flex justify-between items-start mb-1">
-                                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700">${w.category}</span>
-                                <span class="text-sm font-bold text-slate-900">$${w.currentValue || 0}</span>
-                            </div>
-                            <h3 class="text-base font-bold text-slate-900">${w.brand} ${w.model}</h3>
-                            <p class="text-xs text-slate-500 mb-2">${w.movementType || 'Standard Movement'}</p>
-                            <p class="text-xs text-slate-600 line-clamp-2">${w.description || 'No description provided.'}</p>
-                        </div>
-                    </div>
-                    <div class="px-4 py-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-                        <button onclick="openShareModal(${w.id})" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Share Report</button>
-                        <div class="flex space-x-2">
-                            <button onclick="editWatch(${w.id})" class="text-xs font-medium text-slate-600 hover:text-slate-900">Edit</button>
-                            <button onclick="deleteWatch(${w.id})" class="text-xs font-medium text-rose-600 hover:text-rose-800">Delete</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function handleImages(event) {
-            const files = event.target.files;
-            for (let file of files) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    currentImages.push(e.target.result);
-                    renderImagePreviews();
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function renderImagePreviews() {
-            const container = document.getElementById('imagePreviewContainer');
-            container.innerHTML = currentImages.map((img, idx) => `
-                <div class="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200 flex-shrink-0">
-                    <img src="${img}" class="w-full h-full object-cover">
-                    <button type="button" onclick="currentImages.splice(${idx},1);renderImagePreviews()" class="absolute top-0 right-0 bg-rose-600 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-bl">&times;</button>
-                </div>
-            `).join('');
-        }
-
-        function addCustomFieldRow(key = '', val = '') {
-            const container = document.getElementById('customFieldsContainer');
-            const div = document.createElement('div');
-            div.className = "flex space-x-2";
-            div.innerHTML = `
-                <input type="text" placeholder="Field Name" value="${key}" class="custom-key w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none">
-                <input type="text" placeholder="Value" value="${val}" class="custom-val w-1/2 bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs outline-none">
-                <button type="button" onclick="this.parentElement.remove()" class="text-rose-500 text-xs px-2">&times;</button>
-            `;
-            container.appendChild(div);
-        }
-
-        function openAddModal() {
-            document.getElementById('modalTitle').innerText = "Add New Watch";
-            document.getElementById('watchForm').reset();
-            document.getElementById('watchId').value = "";
-            currentImages = [];
-            document.getElementById('imagePreviewContainer').innerHTML = "";
-            document.getElementById('customFieldsContainer').innerHTML = "";
-            document.getElementById('watchModal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('watchModal').classList.add('hidden');
-        }
-
-        function editWatch(id) {
-            const w = watches.find(item => item.id === id);
-            if (!w) return;
-            document.getElementById('modalTitle').innerText = "Edit Watch";
-            document.getElementById('watchId').value = w.id;
-            document.getElementById('brand').value = w.brand || '';
-            document.getElementById('model').value = w.model || '';
-            document.getElementById('category').value = w.category || 'Diver';
-            document.getElementById('movementType').value = w.movementType || '';
-            document.getElementById('serialNumber').value = w.serialNumber || '';
-            document.getElementById('purchaseDate').value = w.purchaseDate || '';
-            document.getElementById('purchasePrice').value = w.purchasePrice || '';
-            document.getElementById('currentValue').value = w.currentValue || '';
-            document.getElementById('description').value = w.description || '';
-            document.getElementById('notesOnIssues').value = w.notesOnIssues || '';
-            
-            currentImages = w.images || [];
-            renderImagePreviews();
-
-            const customContainer = document.getElementById('customFieldsContainer');
-            customContainer.innerHTML = "";
-            if (w.customFields) {
-                for (let [k, v] of Object.entries(w.customFields)) {
-                    addCustomFieldRow(k, v);
-                }
-            }
-            document.getElementById('watchModal').classList.remove('hidden');
-        }
-
-        function saveWatch(event) {
-            event.preventDefault();
-            const id = document.getElementById('watchId').value;
-            
-            const customFields = {};
-            const keys = document.querySelectorAll('.custom-key');
-            const vals = document.querySelectorAll('.custom-val');
-            keys.forEach((k, idx) => {
-                if (k.value.trim()) customFields[k.value.trim()] = vals[idx].value.trim();
-            });
-
-            const watchData = {
-                id: id ? Number(id) : Date.now(),
-                brand: document.getElementById('brand').value,
-                model: document.getElementById('model').value,
-                category: document.getElementById('category').value,
-                movementType: document.getElementById('movementType').value,
-                serialNumber: document.getElementById('serialNumber').value,
-                purchaseDate: document.
-
-
-                
