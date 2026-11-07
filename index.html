@@ -7,95 +7,20 @@
         body { font-family: sans-serif; background: #090d16; margin: 0; padding: 16px; color: #f8fafc; }
         header { display: flex; justify-content: space-between; align-items: center; background: #1e293b; color: white; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; border: 1px solid #334155; }
         button { background: #6366f1; color: white; border: none; padding: 8px 14px; border-radius: 16px; font-weight: bold; font-size: 13px; cursor: pointer; }
-        .card { background: #1e293b; padding: 14px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #334155; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; padding: 16px; z-index: 50; }
+        .card { background: #1e293b; border-radius: 10px; margin-bottom: 12px; border: 1px solid #334155; overflow: hidden; }
+        .card-img { width: 100%; height: 160px; object-fit: cover; background: #0f172a; }
+        .card-body { padding: 14px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); justify-content: center; align-items: center; padding: 16px; z-index: 50; }
         .modal.open { display: flex; }
-        .modal-box { background: #1e293b; color: #f8fafc; padding: 18px; border-radius: 14px; width: 100%; max-width: 360px; max-height: 85vh; overflow-y: auto; border: 1px solid #334155; }
+        .modal-box { background: #1e293b; color: #f8fafc; padding: 18px; border-radius: 14px; width: 100%; max-width: 380px; max-height: 85vh; overflow-y: auto; border: 1px solid #334155; }
         input, select, textarea { width: 100%; padding: 8px; margin: 4px 0 10px 0; border: 1px solid #475569; border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #0f172a; color: #f8fafc; }
         label { font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; }
+        .img-prev { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; }
+        .img-prev img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #475569; }
+        .chk-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; color: #cbd5e1; }
+        .chk-row input { width: auto; margin: 0; }
     </style>
 </head>
-<body>
-    <header>
-        <h3 style="margin:0;">⌚ Watch Vault</h3>
-        <button onclick="toggleM(true)">+ Add Watch</button>
-    </header>
-
-    <div id="list"></div>
-
-    <div id="modal" class="modal">
-        <div class="modal-box">
-            <h3 style="margin-top:0;">Add Watch</h3>
-            <form onsubmit="saveW(event)">
-                                <label>Brand</label><input type="text" id="brand" required placeholder="Rolex">
-                <label>Model</label><input type="text" id="model" required placeholder="Submariner">
-                <label>Category</label>
-                <select id="cat">
-                    <option>Diver</option><option>Dress</option><option>Chronograph</option><option>Field</option><option>Vintage</option>
-                </select>
-                <label>Est. Value ($)</label><input type="number" id="val">
-                <label>Movement</label><input type="text" id="mov" placeholder="Automatic">
-                <label>Serial No.</label><input type="text" id="sn">
-                <label>Notes</label><textarea id="notes" rows="2"></textarea>
-                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
-                    <button type="button" onclick="toggleM(false)" style="background:#475569;">Cancel</button>
-                    <button type="submit">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-        <script>
-        var W = JSON.parse(localStorage.getItem('W') || '[]');
-        function toggleM(o) { document.getElementById('modal').className = o ? 'modal open' : 'modal'; }
-        function saveW(e) {
-            e.preventDefault();
-            W.push({
-                id: Date.now(),
-                b: document.getElementById('brand').value,
-                m: document.getElementById('model').value,
-                c: document.getElementById('cat').value,
-                v: document.getElementById('val').value,
-                mov: document.getElementById('mov').value,
-                sn: document.getElementById('sn').value,
-                n: document.getElementById('notes').value
-            });
-            localStorage.setItem('W', JSON.stringify(W));
-            e.target.reset();
-            toggleM(false);
-            render();
-        }
-                    function delW(id) {
-            if(confirm("Delete watch?")) { W = W.filter(x => x.id !== id); localStorage.setItem('W', JSON.stringify(W)); render(); }
-        }
-        function shareW(id) {
-            var x = W.find(w => w.id === id);
-            if(!x) return;
-            var txt = "⌚ Watch Details\nBrand: " + x.b + "\nModel: " + x.m + "\nCategory: " + x.c + "\nValue: $" + (x.v || 'N/A') + "\nMovement: " + (x.mov || 'N/A') + "\nSerial: " + (x.sn || 'N/A') + "\nNotes: " + (x.n || 'None');
-            if(navigator.share) navigator.share({title: x.b + " " + x.m, text: txt});
-            else prompt("Copy details to share:", txt);
-        }
-        function render() {
-            var el = document.getElementById('list');
-            if(!W.length) { el.innerHTML = '<p style="text-align:center; color:#94a3b8; margin-top:30px;">No watches yet. Tap "+ Add Watch" to start!</p>'; return; }
-            el.innerHTML = W.map(x => `
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-size:11px; background:#312e81; color:#c7d2fe; padding:2px 6px; border-radius:8px; font-weight:bold;">${x.c}</span>
-                        <b style="font-size:14px; color:#34d399;">$${x.v || '0'}</b>
-                    </div>
-                    <h3 style="margin:6px 0 2px 0; font-size:16px;">${x.b} ${x.m}</h3>
-                    <p style="font-size:12px; color:#94a3b8; margin:0 0 10px 0;">${x.n || 'No notes'}</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #334155; padding-top:8px;">
-                        <button onclick="shareW(${x.id})" style="background:#475569; padding:4px 10px; font-size:11px;">Share</button>
-                        <button onclick="delW(${x.id})" style="background:#ef4444; padding:4px 10px; font-size:11px;">Delete</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-        render();
-    </script>
-</body>
-</html>
 <body>
     <header>
         <h3 style="margin:0;">⌚ Watch Vault</h3>
