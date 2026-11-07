@@ -191,6 +191,7 @@
 
         function handleImgs(e) {
             var files = e.target.files;
+            if (!files.length) return;
             for (var i = 0; i < files.length; i++) {
                 var reader = new FileReader();
                 reader.onload = function(evt) {
@@ -226,8 +227,24 @@
                 '<button type="button" onclick="this.parentElement.remove()" class="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded-lg text-xs font-bold">&times;</button>';
             box.appendChild(div);
         }
-                    function handleFormSubmit(e) {
+                    async function handleFormSubmit(e) {
             e.preventDefault();
+            
+            var fileInput = document.getElementById('imgs');
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                var filePromises = Array.from(fileInput.files).map(function(file) {
+                    return new Promise(function(resolve) {
+                        var r = new FileReader();
+                        r.onload = function(evt) { resolve(evt.target.result); };
+                        r.readAsDataURL(file);
+                    });
+                });
+                var loadedImgs = await Promise.all(filePromises);
+                loadedImgs.forEach(function(img) {
+                    if (!currentTempImages.includes(img)) currentTempImages.push(img);
+                });
+            }
+
             var id = document.getElementById('watchId').value;
             var customFields = {};
             var keys = document.querySelectorAll('.custom-key');
@@ -259,7 +276,7 @@
             try {
                 localStorage.setItem('watches_v2', JSON.stringify(watches));
             } catch (err) {
-                alert("Storage limit reached! Try uploading smaller photos as local storage has a 5MB browser limit.");
+                alert("Storage limit reached! Try uploading smaller or fewer photos as local storage has a 5MB browser limit.");
                 return;
             }
 
