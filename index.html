@@ -7,6 +7,12 @@
         body { font-family: sans-serif; background: #090d16; margin: 0; padding: 16px; color: #f8fafc; }
         header { display: flex; justify-content: space-between; align-items: center; background: #1e293b; color: white; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; border: 1px solid #334155; }
         button { background: #6366f1; color: white; border: none; padding: 8px 14px; border-radius: 16px; font-weight: bold; font-size: 13px; cursor: pointer; }
+        
+        /* Category Filters Scroll Bar */
+        .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 12px; white-space: nowrap; }
+        .filter-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .filter-btn.active { background: #6366f1; color: white; border-color: #6366f1; }
+
         .card { background: #1e293b; border-radius: 10px; margin-bottom: 12px; border: 1px solid #334155; overflow: hidden; }
         .card-img { width: 100%; height: 160px; object-fit: cover; background: #0f172a; }
         .card-body { padding: 14px; }
@@ -26,6 +32,16 @@
         <h3 style="margin:0;">⌚ Watch Vault</h3>
         <button onclick="toggleM('modal', true)">+ Add Watch</button>
     </header>
+
+    <!-- Category Filter Bar -->
+    <div class="filters" id="catFilters">
+        <button class="filter-btn active" onclick="setFilter('All', this)">All</button>
+        <button class="filter-btn" onclick="setFilter('Diver', this)">Diver</button>
+        <button class="filter-btn" onclick="setFilter('Dress', this)">Dress</button>
+        <button class="filter-btn" onclick="setFilter('Chronograph', this)">Chronograph</button>
+        <button class="filter-btn" onclick="setFilter('Field', this)">Field</button>
+        <button class="filter-btn" onclick="setFilter('Vintage', this)">Vintage</button>
+    </div>
 
     <div id="list"></div>
 
@@ -62,26 +78,38 @@
             </form>
         </div>
     </div>
-        <!-- Selective Share Modal -->
+    <!-- Selective Share & PDF Report Modal -->
     <div id="shareModal" class="modal">
         <div class="modal-box">
-            <h3 style="margin-top:0;">Select Items to Share</h3>
+            <h3 style="margin-top:0;">Share / PDF Report Options</h3>
             <div id="shareChkBox"></div>
-            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:14px;">
+                <button type="button" onclick="doShare(false)">Share Text Only</button>
+                <button type="button" onclick="generatePDF()" style="background:#0ea5e9;">Download PDF Report</button>
                 <button type="button" onclick="toggleM('shareModal', false)" style="background:#475569;">Cancel</button>
-                <button type="button" onclick="doShare()">Share Now</button>
             </div>
         </div>
     </div>
+
+    <!-- Hidden Printable PDF Template Frame -->
+    <div id="pdfPrintArea" style="display:none; background:white; color:black; padding:30px; font-family:sans-serif;"></div>
 
     <script>
         var W = JSON.parse(localStorage.getItem('W') || '[]');
         var tempImgs = [];
         var activeShareId = null;
+        var activeCat = 'All';
 
         function toggleM(id, show) {
             document.getElementById(id).className = show ? 'modal open' : 'modal';
             if(!show && id === 'modal') { tempImgs = []; document.getElementById('imgPrev').innerHTML = ''; document.getElementById('customBox').innerHTML = ''; }
+        }
+
+        function setFilter(cat, btn) {
+            activeCat = cat;
+            document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+            btn.classList.add('active');
+            render();
         }
 
         function handleImgs(e) {
@@ -121,7 +149,7 @@
                 c: document.getElementById('cat').value,
                 v: document.getElementById('val').value,
                 mov: document.getElementById('mov').value,
-                sn: document.getElementById('serialNumber') ? document.getElementById('serialNumber').value : document.getElementById('sn').value,
+                sn: document.getElementById('sn').value,
                 n: document.getElementById('notes').value,
                 imgs: tempImgs,
                 cust: custom
@@ -181,10 +209,58 @@
             else prompt("Copy details to share:", txt);
         }
 
+        function generatePDF() {
+            var x = W.find(function(w){ return w.id === activeShareId; });
+            if(!x) return;
+            
+            var pdfHtml = '<h1 style="color:#0f172a; border-bottom:2px solid #cbd5e1; padding-bottom:8px;">Watch Vault Record Report</h1>';
+            pdfHtml += '<h2 style="color:#334155; margin-top:16px;">'+x.b+' '+x.m+'</h2>';
+            pdfHtml += '<p><strong>Category:</strong> '+x.c+'</p>';
+            if(x.v) pdfHtml += '<p><strong>Estimated Value:</strong> $'+x.v+'</p>';
+            if(x.mov) pdfHtml += '<p><strong>Movement:</strong> '+x.mov+'</p>';
+            if(x.sn) pdfHtml += '<p><strong>Serial Number:</strong> '+x.sn+'</p>';
+            if(x.n) pdfHtml += '<p><strong>Notes:</strong> '+x.n+'</p>';
+            
+            if(x.cust && Object.keys(x.cust).length) {
+                pdfHtml += '<h3>Custom Specifications</h3><ul>';
+                Object.keys(x.cust).forEach(function(k){
+                    pdfHtml += '<li><strong>'+k+':</strong> '+x.cust[k]+'</li>';
+                });
+                pdfHtml += '</ul>';
+            }
+
+            if(x.imgs && x.imgs.length) {
+                pdfHtml += '<h3>Attached Photos</h3><div style="display:flex; flex-wrap:wrap; gap:10px;">';
+                x.imgs.forEach(function(img){
+                    pdfHtml += '<img src="'+img+'" style="width:200px; height:150px; object-fit:cover; border-radius:8px; border:1px solid #cbd5e1;">';
+                });
+                pdfHtml += '</div>';
+            }
+
+            var printArea = document.getElementById('pdfPrintArea');
+            printArea.innerHTML = pdfHtml;
+            toggleM('shareModal', false);
+            
+            // Open clean print window allowing user to save as PDF on mobile
+            var win = window.open('', '', 'height=700,width=700');
+            win.document.write('<html><head><title>Watch Report - ' + x.b + ' ' + x.m + '</title></head><body>');
+            win.document.write(pdfHtml);
+            win.document.write('</body></html>');
+            win.document.close();
+            win.focus();
+            setTimeout(function(){ win.print(); }, 500);
+        }
+
         function render() {
             var el = document.getElementById('list');
-            if(!W.length) { el.innerHTML = '<p style="text-align:center; color:#94a3b8; margin-top:30px;">No watches yet. Tap "+ Add Watch" to start!</p>'; return; }
-            el.innerHTML = W.map(function(x){
+            var filtered = activeCat === 'All' ? W : W.filter(function(x){ return x.c === activeCat; });
+            
+            if(!filtered.length) { 
+                el.innerHTML = '<p style="text-align:center; color:#94a3b8; margin-top:30px;">No watches found in this category.</p>'; 
+                return; 
+            }
+            
+            el.innerHTML = filtered.map(function(x){
                 var imgHtml = (x.imgs && x.imgs.length) ? '<img src="'+x.imgs[0]+'" class="card-img">' : '';
                 return '<div class="card">' + imgHtml +
                     '<div class="card-body">' +
@@ -195,7 +271,7 @@
                         '<h3 style="margin:6px 0 2px 0; font-size:16px;">'+x.b+' '+x.m+'</h3>' +
                         '<p style="font-size:12px; color:#94a3b8; margin:0 0 10px 0;">'+(x.n || 'No notes')+'</p>' +
                         '<div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #334155; padding-top:8px;">' +
-                            '<button onclick="openShare('+x.id+')" style="background:#475569; padding:4px 10px; font-size:11px;">Share</button>' +
+                            '<button onclick="openShare('+x.id+')" style="background:#475569; padding:4px 10px; font-size:11px;">Share / PDF</button>' +
                             '<button onclick="delW('+x.id+')" style="background:#ef4444; padding:4px 10px; font-size:11px;">Delete</button>' +
                         '</div>' +
                     '</div>' +
