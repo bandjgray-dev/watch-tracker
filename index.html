@@ -147,6 +147,12 @@
         </div>
     </div>
 
+    <!-- Fullscreen Image Lightbox Modal -->
+    <div id="lightboxModal" class="hidden fixed inset-0 bg-black/95 z-[100] items-center justify-center p-2" onclick="closeLightbox()">
+        <button class="absolute top-4 right-4 bg-slate-800 text-white w-10 h-10 rounded-full font-bold text-lg flex items-center justify-center shadow-lg">&times;</button>
+        <img id="lightboxImg" src="" class="max-w-full max-h-full object-contain rounded-xl shadow-2xl">
+    </div>
+
     <!-- Share & PDF Report Modal -->
     <div id="shareModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4">
@@ -304,11 +310,11 @@
             document.getElementById('detSerial').innerText = w.serialNumber || 'N/A';
             document.getElementById('detDesc').innerText = w.description || 'No notes provided.';
 
-            // Render gallery
+            // Render gallery with click-to-zoom support
             var imgContainer = document.getElementById('detImagesContainer');
             if (w.images && w.images.length) {
                 imgContainer.innerHTML = w.images.map(function(img) {
-                    return '<img src="' + img + '" class="w-32 h-32 object-cover rounded-xl border border-slate-800 flex-shrink-0">';
+                    return '<img src="' + img + '" onclick="openLightbox(\'' + img + '\')" class="w-32 h-32 object-cover rounded-xl border border-slate-800 flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity" title="Tap to enlarge">';
                 }).join('');
                 imgContainer.classList.remove('hidden');
             } else {
@@ -345,6 +351,19 @@
         function closeDetailModal() {
             document.getElementById('detailModal').classList.add('hidden');
             document.getElementById('detailModal').classList.remove('flex');
+        }
+
+        function openLightbox(imgSrc) {
+            document.getElementById('lightboxImg').src = imgSrc;
+            var box = document.getElementById('lightboxModal');
+            box.classList.remove('hidden');
+            box.classList.add('flex');
+        }
+
+        function closeLightbox() {
+            var box = document.getElementById('lightboxModal');
+            box.classList.add('hidden');
+            box.classList.remove('flex');
         }
 
         async function handleFormSubmit(e) {
