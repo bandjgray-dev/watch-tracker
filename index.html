@@ -147,10 +147,21 @@
         </div>
     </div>
 
-    <!-- Fullscreen Image Lightbox Modal -->
-    <div id="lightboxModal" class="hidden fixed inset-0 bg-black/95 z-[100] items-center justify-center p-2" onclick="closeLightbox()">
-        <button class="absolute top-4 right-4 bg-slate-800 text-white w-10 h-10 rounded-full font-bold text-lg flex items-center justify-center shadow-lg">&times;</button>
-        <img id="lightboxImg" src="" class="max-w-full max-h-full object-contain rounded-xl shadow-2xl">
+    <!-- Fullscreen Image Carousel Lightbox Modal -->
+    <div id="lightboxModal" class="hidden fixed inset-0 bg-black/95 z-[100] items-center justify-center p-4">
+        <button onclick="closeLightbox()" class="absolute top-4 right-4 bg-slate-800 text-white w-10 h-10 rounded-full font-bold text-lg flex items-center justify-center shadow-lg z-10">&times;</button>
+        
+        <!-- Previous Arrow -->
+        <button onclick="prevLightboxImage()" id="lightboxPrevBtn" class="absolute left-4 bg-slate-800/80 hover:bg-slate-700 text-white w-10 h-10 rounded-full font-bold text-lg flex items-center justify-center shadow-lg z-10">&#10094;</button>
+        
+        <!-- Current Image -->
+        <img id="lightboxImg" src="" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl">
+
+        <!-- Next Arrow -->
+        <button onclick="nextLightboxImage()" id="lightboxNextBtn" class="absolute right-4 bg-slate-800/80 hover:bg-slate-700 text-white w-10 h-10 rounded-full font-bold text-lg flex items-center justify-center shadow-lg z-10">&#10095;</button>
+        
+        <!-- Image Index Counter Indicator -->
+        <div id="lightboxCounter" class="absolute bottom-6 bg-slate-900/80 text-slate-300 text-xs px-3 py-1 rounded-full border border-slate-800"></div>
     </div>
 
     <!-- Share & PDF Report Modal -->
@@ -201,6 +212,8 @@
         var currentTempImages = [];
         var activeCategoryFilter = 'All';
         var activeShareWatchId = null;
+        var lightboxImagesList = [];
+        var lightboxCurrentIndex = 0;
 
         function openModal() {
             document.getElementById('modalTitle').innerText = 'Add Watch';
@@ -310,14 +323,16 @@
             document.getElementById('detSerial').innerText = w.serialNumber || 'N/A';
             document.getElementById('detDesc').innerText = w.description || 'No notes provided.';
 
-            // Render gallery with click-to-zoom support
+            // Render gallery with index tracking for lightbox slider
             var imgContainer = document.getElementById('detImagesContainer');
             if (w.images && w.images.length) {
-                imgContainer.innerHTML = w.images.map(function(img) {
-                    return '<img src="' + img + '" onclick="openLightbox(\'' + img + '\')" class="w-32 h-32 object-cover rounded-xl border border-slate-800 flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity" title="Tap to enlarge">';
+                lightboxImagesList = w.images;
+                imgContainer.innerHTML = w.images.map(function(img, idx) {
+                    return '<img src="' + img + '" onclick="openLightboxAtIndex(' + idx + ')" class="w-32 h-32 object-cover rounded-xl border border-slate-800 flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity" title="Tap to enlarge">';
                 }).join('');
                 imgContainer.classList.remove('hidden');
             } else {
+                lightboxImagesList = [];
                 imgContainer.innerHTML = '';
                 imgContainer.classList.add('hidden');
             }
@@ -353,11 +368,44 @@
             document.getElementById('detailModal').classList.remove('flex');
         }
 
-        function openLightbox(imgSrc) {
-            document.getElementById('lightboxImg').src = imgSrc;
+        function openLightboxAtIndex(index) {
+            if (!lightboxImagesList.length) return;
+            lightboxCurrentIndex = index;
+            updateLightboxDisplay();
             var box = document.getElementById('lightboxModal');
             box.classList.remove('hidden');
             box.classList.add('flex');
+        }
+
+        function updateLightboxDisplay() {
+            document.getElementById('lightboxImg').src = lightboxImagesList[lightboxCurrentIndex];
+            
+            var prevBtn = document.getElementById('lightboxPrevBtn');
+            var nextBtn = document.getElementById('lightboxNextBtn');
+            var counter = document.getElementById('lightboxCounter');
+
+            if (lightboxImagesList.length > 1) {
+                prevBtn.classList.remove('hidden');
+                nextBtn.classList.remove('hidden');
+                counter.innerText = (lightboxCurrentIndex + 1) + ' / ' + lightboxImagesList.length;
+                counter.classList.remove('hidden');
+            } else {
+                prevBtn.classList.add('hidden');
+                nextBtn.classList.add('hidden');
+                counter.classList.add('hidden');
+            }
+        }
+
+        function nextLightboxImage() {
+            if (!lightboxImagesList.length) return;
+            lightboxCurrentIndex = (lightboxCurrentIndex + 1) % lightboxImagesList.length;
+            updateLightboxDisplay();
+        }
+
+        function prevLightboxImage() {
+            if (!lightboxImagesList.length) return;
+            lightboxCurrentIndex = (lightboxCurrentIndex - 1 + lightboxImagesList.length) % lightboxImagesList.length;
+            updateLightboxDisplay();
         }
 
         function closeLightbox() {
@@ -635,12 +683,4 @@
                             '<button onclick="openShareModal(' + w.id + ')" class="bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-lg border border-indigo-800/50 transition-all">Share / PDF</button>' +
                         '</div>' +
                         '<button onclick="deleteWatch(' + w.id + ')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all">Delete</button>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-        }
-
-        render();
-    </script>
-</body>
-</html>
+                    '<
