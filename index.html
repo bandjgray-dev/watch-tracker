@@ -89,7 +89,7 @@
                         <input type="text" id="serialNumber" placeholder="X829F114" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
-                <!-- Requested Standard Fields -->
+                <!-- Specification Fields -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Case Size</label>
@@ -240,9 +240,15 @@
             }
         ];
 
-        var stored = localStorage.getItem('watches_v6');
-        var watches = stored ? JSON.parse(stored) : defaultWatches;
-        if (!stored) localStorage.setItem('watches_v6', JSON.stringify(watches));
+        var stored = localStorage.getItem('watches_v7');
+        var watches = [];
+        try {
+            watches = stored ? JSON.parse(stored) : defaultWatches;
+            if (!Array.isArray(watches)) watches = defaultWatches;
+        } catch(e) {
+            watches = defaultWatches;
+        }
+        localStorage.setItem('watches_v7', JSON.stringify(watches));
 
         var currentTempImages = [];
         var activeCategoryFilter = 'All';
@@ -338,15 +344,14 @@
             var w = watches.find(function(item) { return item.id === id; });
             if (!w) return;
 
-            document.getElementById('detCategory').innerText = w.category;
-            document.getElementById('detTitle').innerText = w.brand + ' ' + w.model;
+            document.getElementById('detCategory').innerText = w.category || 'General';
+            document.getElementById('detTitle').innerText = (w.brand || '') + ' ' + (w.model || '');
             document.getElementById('detVal').innerText = w.currentValue ? '$' + Number(w.currentValue).toLocaleString() : 'N/A';
             document.getElementById('detAsking').innerText = w.askingPrice ? '$' + Number(w.askingPrice).toLocaleString() : 'N/A';
             document.getElementById('detPurchasePrice').innerText = w.purchasePrice ? '$' + Number(w.purchasePrice).toLocaleString() : 'N/A';
             document.getElementById('detPurchaseDate').innerText = w.purchaseDate || 'N/A';
             document.getElementById('detDesc').innerText = w.description || 'No notes provided.';
 
-            // Render specs grid
             var specFields = [
                 { label: 'Case Size', val: w.caseSize },
                 { label: 'Movement', val: w.movementType },
@@ -365,7 +370,6 @@
             });
             document.getElementById('detSpecsGrid').innerHTML = specsHtml;
 
-            // Render gallery
             var imgContainer = document.getElementById('detImagesContainer');
             if (w.images && w.images.length) {
                 imgContainer.innerHTML = w.images.map(function(img) {
@@ -458,7 +462,7 @@
             }
 
             try {
-                localStorage.setItem('watches_v6', JSON.stringify(watches));
+                localStorage.setItem('watches_v7', JSON.stringify(watches));
             } catch (err) {
                 alert("Storage limit reached! Try exporting a backup file to free up space.");
                 return;
@@ -501,7 +505,7 @@
         function deleteWatch(id) {
             if (confirm("Delete this watch record?")) {
                 watches = watches.filter(function(w) { return w.id !== id; });
-                localStorage.setItem('watches_v6', JSON.stringify(watches));
+                localStorage.setItem('watches_v7', JSON.stringify(watches));
                 render();
             }
         }
@@ -514,7 +518,7 @@
             var box = document.getElementById('shareOptionsBox');
             var html = '';
             var items = [
-                { id: 'sb_brand', label: 'Watch Name', val: w.brand + ' ' + w.model, def: true },
+                { id: 'sb_brand', label: 'Watch Name', val: (w.brand || '') + ' ' + (w.model || ''), def: true },
                 { id: 'sb_cat', label: 'Category', val: w.category, def: true },
                 { id: 'sb_val', label: 'Estimated Value', val: '$' + (w.currentValue || 'N/A'), def: true },
                 { id: 'sb_ask', label: 'Asking Price', val: '$' + (w.askingPrice || 'N/A'), def: true },
@@ -554,8 +558,8 @@
             var txt = "⌚ Watch Details Report\n";
             
             var checkMap = {
-                'sb_brand': "Watch: " + w.brand + " " + w.model,
-                'sb_cat': "Category: " + w.category,
+                'sb_brand': "Watch: " + (w.brand || '') + " " + (w.model || ''),
+                'sb_cat': "Category: " + (w.category || ''),
                 'sb_val': "Est. Value: $" + (w.currentValue || 'N/A'),
                 'sb_ask': "Asking Price: $" + (w.askingPrice || 'N/A'),
                 'sb_mov': "Movement: " + (w.movementType || 'N/A'),
@@ -586,7 +590,7 @@
             var w = watches.find(function(item) { return item.id === activeShareWatchId; });
             var txt = buildShareTextPayload();
             closeShareModal();
-            if (navigator.share) navigator.share({ title: w.brand + " " + w.model, text: txt });
+            if (navigator.share) navigator.share({ title: (w.brand || '') + " " + (w.model || ''), text: txt });
             else prompt("Copy report to share:", txt);
         }
 
@@ -594,7 +598,7 @@
             var w = watches.find(function(item) { return item.id === activeShareWatchId; });
             var txt = buildShareTextPayload();
             closeShareModal();
-            window.location.href = "mailto:?subject=" + encodeURIComponent("Watch Specification: " + w.brand + " " + w.model) + "&body=" + encodeURIComponent(txt);
+            window.location.href = "mailto:?subject=" + encodeURIComponent("Watch Specification: " + (w.brand || '') + " " + (w.model || '')) + "&body=" + encodeURIComponent(txt);
         }
 
         function executeGeneratePDF() {
@@ -603,8 +607,8 @@
 
             var pdfHtml = '<div style="font-family:sans-serif; padding:20px; max-width:600px; margin:auto;">' +
                 '<h1 style="border-bottom:2px solid #cbd5e1; padding-bottom:8px; color:#0f172a;">Watch Vault Record Report</h1>' +
-                '<h2 style="color:#475569; margin-top:16px;">' + w.brand + ' ' + w.model + '</h2>' +
-                '<p><strong>Category:</strong> ' + w.category + '</p>' +
+                '<h2 style="color:#475569; margin-top:16px;">' + (w.brand || '') + ' ' + (w.model || '') + '</h2>' +
+                '<p><strong>Category:</strong> ' + (w.category || 'N/A') + '</p>' +
                 '<p><strong>Estimated Value:</strong> $' + (w.currentValue || 'N/A') + '</p>' +
                 '<p><strong>Asking Price:</strong> $' + (w.askingPrice || 'N/A') + '</p>' +
                 '<p><strong>Case Size:</strong> ' + (w.caseSize || 'N/A') + '</p>' +
@@ -631,7 +635,7 @@
 
             closeShareModal();
             var win = window.open('', '', 'width=700,height=700');
-            win.document.write('<html><head><title>Watch Report - ' + w.brand + ' ' + w.model + '</title></head><body>' + pdfHtml + '</body></html>');
+            win.document.write('<html><head><title>Watch Report</title></head><body>' + pdfHtml + '</body></html>');
             win.document.close();
             win.focus();
             setTimeout(function() { win.print(); }, 500);
@@ -657,7 +661,7 @@
                     if (Array.isArray(parsed)) {
                         if (confirm("Restore " + parsed.length + " watches into your collection?")) {
                             watches = parsed;
-                            localStorage.setItem('watches_v6', JSON.stringify(watches));
+                            localStorage.setItem('watches_v7', JSON.stringify(watches));
                             render();
                             alert("Backup restored!");
                         }
@@ -669,9 +673,11 @@
 
         function render() {
             var list = document.getElementById('watchList');
+            if (!list) return;
+            
             var filtered = activeCategoryFilter === 'All' ? watches : watches.filter(function(w) { return w.category === activeCategoryFilter; });
 
-            if (!filtered.length) {
+            if (!filtered || !filtered.length) {
                 list.innerHTML = '<div class="text-center py-12 text-slate-500 text-xs font-medium bg-slate-900 border border-slate-800 rounded-2xl">No watches found in this category.</div>';
                 return;
             }
@@ -679,7 +685,6 @@
             list.innerHTML = filtered.map(function(w) {
                 var imgCover = (w.images && w.images.length) ? '<img src="' + w.images[0] + '" class="w-full h-44 object-cover cursor-pointer" onclick="openDetailModal(' + w.id + ')">' : '';
 
-                // Main card view shows Case Size & Movement Type, custom fields removed
                 var cardSpecsHtml = '<div class="flex flex-wrap gap-1.5 mt-2.5 py-1">';
                 if (w.caseSize) cardSpecsHtml += '<span class="bg-slate-950 text-slate-400 text-[10px] px-2 py-0.5 rounded-md border border-slate-800"><b class="text-slate-300">Case:</b> ' + w.caseSize + '</span>';
                 if (w.movementType) cardSpecsHtml += '<span class="bg-slate-950 text-slate-400 text-[10px] px-2 py-0.5 rounded-md border border-slate-800"><b class="text-slate-300">Movement:</b> ' + w.movementType + '</span>';
@@ -689,7 +694,7 @@
                     imgCover +
                     '<div class="p-4 space-y-2 cursor-pointer" onclick="openDetailModal(' + w.id + ')">' +
                         '<div class="flex justify-between items-center">' +
-                            '<span class="bg-indigo-950/80 text-indigo-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-indigo-800/50">' + w.category + '</span>' +
+                            '<span class="bg-indigo-950/80 text-indigo-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-indigo-800/50">' + (w.category || 'General') + '</span>' +
                             '<span class="text-emerald-400 font-bold text-sm">' + (w.currentValue ? '$' + Number(w.currentValue).toLocaleString() : '$0') + '</span>' +
                         '</div>' +
-                        '<h3 class="text-base font-bold text-white hover:te
+                        '<h3 class="text-base font-bold text-
