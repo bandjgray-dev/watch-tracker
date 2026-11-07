@@ -34,7 +34,7 @@
         <div class="modal-box">
             <h3 style="margin-top:0;">Add Watch</h3>
             <form onsubmit="saveW(event)">
-                                <label>Brand</label><input type="text" id="brand" required placeholder="Rolex">
+                <label>Brand</label><input type="text" id="brand" required placeholder="Rolex">
                 <label>Model</label><input type="text" id="model" required placeholder="Submariner">
                 <label>Category</label>
                 <select id="cat">
@@ -106,7 +106,8 @@
             d.innerHTML = '<input type="text" placeholder="Field" value="'+(k||'')+'" class="ckey" style="margin:0;"><input type="text" placeholder="Value" value="'+(v||'')+'" class="cval" style="margin:0;"><button type="button" onclick="this.parentElement.remove()" style="background:#ef4444; padding:0 8px;">&times;</button>';
             document.getElementById('customBox').appendChild(d);
         }
-                function saveW(e) {
+
+        function saveW(e) {
             e.preventDefault();
             var custom = {};
             var keys = document.querySelectorAll('.ckey');
@@ -120,7 +121,7 @@
                 c: document.getElementById('cat').value,
                 v: document.getElementById('val').value,
                 mov: document.getElementById('mov').value,
-                sn: document.getElementById('sn').value,
+                sn: document.getElementById('serialNumber') ? document.getElementById('serialNumber').value : document.getElementById('sn').value,
                 n: document.getElementById('notes').value,
                 imgs: tempImgs,
                 cust: custom
