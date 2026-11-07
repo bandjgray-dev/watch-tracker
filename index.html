@@ -112,7 +112,42 @@
             </form>
         </div>
     </div>
-        <!-- Share & PDF Report Modal -->
+        <!-- Expanded Detail Modal -->
+    <div id="detailModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-start">
+                <div>
+                    <span id="detCategory" class="bg-indigo-950/80 text-indigo-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-indigo-800/50"></span>
+                    <h2 id="detTitle" class="text-xl font-bold text-white mt-1.5"></h2>
+                </div>
+                <button onclick="closeDetailModal()" class="bg-slate-800 text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">&times;</button>
+            </div>
+            
+            <!-- Image Carousel / Gallery -->
+            <div id="detImagesContainer" class="flex gap-2 overflow-x-auto no-scrollbar py-1"></div>
+
+            <!-- Specs Grid -->
+            <div class="grid grid-cols-2 gap-2 bg-slate-950 p-3 rounded-2xl border border-slate-800/80 text-xs">
+                <div><span class="text-slate-500 block uppercase text-[9px] font-bold">Estimated Value</span><span id="detVal" class="text-emerald-400 font-bold text-sm"></span></div>
+                <div><span class="text-slate-500 block uppercase text-[9px] font-bold">Movement</span><span id="detMovement" class="text-slate-200 font-medium"></span></div>
+                <div class="col-span-2 pt-1 border-t border-slate-900"><span class="text-slate-500 block uppercase text-[9px] font-bold">Serial Number</span><span id="detSerial" class="text-slate-300 font-mono"></span></div>
+            </div>
+
+            <div>
+                <h4 class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Notes</h4>
+                <p id="detDesc" class="text-xs text-slate-300 leading-relaxed bg-slate-950 p-3 rounded-2xl border border-slate-800/80"></p>
+            </div>
+
+            <div id="detCustomFieldsSection"></div>
+
+            <div class="flex gap-2 pt-2">
+                <button type="button" id="detEditBtn" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs py-2.5 rounded-xl transition-all">Edit Watch</button>
+                <button type="button" id="detShareBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2.5 rounded-xl transition-all">Share / PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share & PDF Report Modal -->
     <div id="shareModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4">
             <h3 class="text-base font-bold text-white">Share / Export Options</h3>
@@ -125,9 +160,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Hidden PDF Printing Container -->
-    <div id="pdfPrintArea" class="hidden bg-white text-black p-8 font-sans"></div>
         <script>
         var defaultWatches = [
             {
@@ -261,7 +293,61 @@
                 '<button type="button" onclick="this.parentElement.remove()" class="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded-lg text-xs font-bold">&times;</button>';
             box.appendChild(div);
         }
-                    async function handleFormSubmit(e) {
+                    function openDetailModal(id) {
+            var w = watches.find(function(item) { return item.id === id; });
+            if (!w) return;
+
+            document.getElementById('detCategory').innerText = w.category;
+            document.getElementById('detTitle').innerText = w.brand + ' ' + w.model;
+            document.getElementById('detVal').innerText = w.currentValue ? '$' + Number(w.currentValue).toLocaleString() : '$0';
+            document.getElementById('detMovement').innerText = w.movementType || 'N/A';
+            document.getElementById('detSerial').innerText = w.serialNumber || 'N/A';
+            document.getElementById('detDesc').innerText = w.description || 'No notes provided.';
+
+            // Render gallery
+            var imgContainer = document.getElementById('detImagesContainer');
+            if (w.images && w.images.length) {
+                imgContainer.innerHTML = w.images.map(function(img) {
+                    return '<img src="' + img + '" class="w-32 h-32 object-cover rounded-xl border border-slate-800 flex-shrink-0">';
+                }).join('');
+                imgContainer.classList.remove('hidden');
+            } else {
+                imgContainer.innerHTML = '';
+                imgContainer.classList.add('hidden');
+            }
+
+            // Render custom fields
+            var custSec = document.getElementById('detCustomFieldsSection');
+            if (w.customFields && Object.keys(w.customFields).length) {
+                custSec.innerHTML = '<h4 class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Custom Specifications</h4>' +
+                    '<div class="grid grid-cols-2 gap-1.5 bg-slate-950 p-3 rounded-2xl border border-slate-800/80 text-xs">' +
+                    Object.keys(w.customFields).map(function(k) {
+                        return '<div><span class="text-slate-500 block uppercase text-[9px] font-bold">' + k + '</span><span class="text-slate-200">' + w.customFields[k] + '</span></div>';
+                    }).join('') + '</div>';
+            } else {
+                custSec.innerHTML = '';
+            }
+
+            // Wire action buttons
+            document.getElementById('detEditBtn').onclick = function() {
+                closeDetailModal();
+                editWatch(w.id);
+            };
+            document.getElementById('detShareBtn').onclick = function() {
+                closeDetailModal();
+                openShareModal(w.id);
+            };
+
+            document.getElementById('detailModal').classList.remove('hidden');
+            document.getElementById('detailModal').classList.add('flex');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+            document.getElementById('detailModal').classList.remove('flex');
+        }
+
+        async function handleFormSubmit(e) {
             e.preventDefault();
             
             var fileInput = document.getElementById('imgs');
@@ -502,7 +588,7 @@
             }
 
             list.innerHTML = filtered.map(function(w) {
-                var imgCover = (w.images && w.images.length) ? '<img src="' + w.images[0] + '" class="w-full h-44 object-cover cursor-pointer" onclick="editWatch(' + w.id + ')">' : '';
+                var imgCover = (w.images && w.images.length) ? '<img src="' + w.images[0] + '" class="w-full h-44 object-cover cursor-pointer" onclick="openDetailModal(' + w.id + ')">' : '';
 
                 var custHtml = '';
                 if (w.customFields && Object.keys(w.customFields).length) {
@@ -515,21 +601,21 @@
 
                 return '<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg transition-all hover:border-slate-700">' +
                     imgCover +
-                    '<div class="p-4 space-y-2">' +
+                    '<div class="p-4 space-y-2 cursor-pointer" onclick="openDetailModal(' + w.id + ')">' +
                         '<div class="flex justify-between items-center">' +
                             '<span class="bg-indigo-950/80 text-indigo-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-indigo-800/50">' + w.category + '</span>' +
                             '<span class="text-emerald-400 font-bold text-sm">' + (w.currentValue ? '$' + Number(w.currentValue).toLocaleString() : '$0') + '</span>' +
                         '</div>' +
-                        '<h3 class="text-base font-bold text-white cursor-pointer hover:text-indigo-400" onclick="editWatch(' + w.id + ')">' + w.brand + ' ' + w.model + '</h3>' +
-                        '<p class="text-xs text-slate-400 leading-relaxed">' + (w.description || 'No description provided.') + '</p>' +
+                        '<h3 class="text-base font-bold text-white hover:text-indigo-400">' + w.brand + ' ' + w.model + '</h3>' +
+                        '<p class="text-xs text-slate-400 leading-relaxed line-clamp-2">' + (w.description || 'No description provided.') + '</p>' +
                         custHtml +
-                        '<div class="flex justify-between items-center pt-3 border-t border-slate-800/80 mt-2">' +
-                            '<div class="flex gap-1.5">' +
-                                '<button onclick="editWatch(' + w.id + ')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">Edit</button>' +
-                                '<button onclick="openShareModal(' + w.id + ')" class="bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-lg border border-indigo-800/50 transition-all">Share / PDF</button>' +
-                            '</div>' +
-                            '<button onclick="deleteWatch(' + w.id + ')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all">Delete</button>' +
+                    '</div>' +
+                    '<div class="flex justify-between items-center px-4 pb-4 pt-2 border-t border-slate-800/80">' +
+                        '<div class="flex gap-1.5">' +
+                            '<button onclick="editWatch(' + w.id + ')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">Edit</button>' +
+                            '<button onclick="openShareModal(' + w.id + ')" class="bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-lg border border-indigo-800/50 transition-all">Share / PDF</button>' +
                         '</div>' +
+                        '<button onclick="deleteWatch(' + w.id + ')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all">Delete</button>' +
                     '</div>' +
                 '</div>';
             }).join('');
