@@ -147,7 +147,7 @@
         </div>
     </div>
 
-    <!-- Fullscreen Image Carousel Lightbox Modal -->
+    <!-- Fullscreen Image Carousel Lightbox Modal with Swipe Support -->
     <div id="lightboxModal" class="hidden fixed inset-0 bg-black/95 z-[100] items-center justify-center p-4">
         <button onclick="closeLightbox()" class="absolute top-4 right-4 bg-slate-800 text-white w-10 h-10 rounded-full font-bold text-lg flex items-center justify-center shadow-lg z-10">&times;</button>
         
@@ -155,7 +155,7 @@
         <button onclick="prevLightboxImage()" id="lightboxPrevBtn" class="absolute left-4 bg-slate-800/80 hover:bg-slate-700 text-white w-10 h-10 rounded-full font-bold text-lg flex items-center justify-center shadow-lg z-10">&#10094;</button>
         
         <!-- Current Image -->
-        <img id="lightboxImg" src="" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl">
+        <img id="lightboxImg" src="" class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl select-none">
 
         <!-- Next Arrow -->
         <button onclick="nextLightboxImage()" id="lightboxNextBtn" class="absolute right-4 bg-slate-800/80 hover:bg-slate-700 text-white w-10 h-10 rounded-full font-bold text-lg flex items-center justify-center shadow-lg z-10">&#10095;</button>
@@ -323,7 +323,6 @@
             document.getElementById('detSerial').innerText = w.serialNumber || 'N/A';
             document.getElementById('detDesc').innerText = w.description || 'No notes provided.';
 
-            // Render gallery with index tracking for lightbox slider
             var imgContainer = document.getElementById('detImagesContainer');
             if (w.images && w.images.length) {
                 lightboxImagesList = w.images;
@@ -337,7 +336,6 @@
                 imgContainer.classList.add('hidden');
             }
 
-            // Render custom fields
             var custSec = document.getElementById('detCustomFieldsSection');
             if (w.customFields && Object.keys(w.customFields).length) {
                 custSec.innerHTML = '<h4 class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Custom Specifications</h4>' +
@@ -349,7 +347,6 @@
                 custSec.innerHTML = '';
             }
 
-            // Wire action buttons
             document.getElementById('detEditBtn').onclick = function() {
                 closeDetailModal();
                 editWatch(w.id);
@@ -412,6 +409,33 @@
             var box = document.getElementById('lightboxModal');
             box.classList.add('hidden');
             box.classList.remove('flex');
+        }
+
+        // Touch Swipe Gesture Handlers for Mobile Lightbox
+        var touchStartX = 0;
+        var touchEndX = 0;
+
+        document.addEventListener('touchstart', function(e) {
+            if (e.target.id === 'lightboxImg' || e.target.closest('#lightboxModal')) {
+                touchStartX = e.changedTouches[0].screenX;
+            }
+        }, false);
+
+        document.addEventListener('touchend', function(e) {
+            if (e.target.id === 'lightboxImg' || e.target.closest('#lightboxModal')) {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipeGesture();
+            }
+        }, false);
+
+        function handleSwipeGesture() {
+            var threshold = 50;
+            if (touchEndX < touchStartX - threshold) {
+                nextLightboxImage();
+            }
+            if (touchEndX > touchStartX + threshold) {
+                prevLightboxImage();
+            }
         }
 
         async function handleFormSubmit(e) {
@@ -677,10 +701,4 @@
                         '<p class="text-xs text-slate-400 leading-relaxed line-clamp-2">' + (w.description || 'No description provided.') + '</p>' +
                         custHtml +
                     '</div>' +
-                    '<div class="flex justify-between items-center px-4 pb-4 pt-2 border-t border-slate-800/80">' +
-                        '<div class="flex gap-1.5">' +
-                            '<button onclick="editWatch(' + w.id + ')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">Edit</button>' +
-                            '<button onclick="openShareModal(' + w.id + ')" class="bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-lg border border-indigo-800/50 transition-all">Share / PDF</button>' +
-                        '</div>' +
-                        '<button onclick="deleteWatch(' + w.id + ')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all">Delete</button>' +
-                    '<
+                    '<div class="flex justify-between items-center px-4 pb-4 pt-2 border-t border-s
