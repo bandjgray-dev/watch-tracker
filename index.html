@@ -53,7 +53,6 @@
             <h2 id="modalTitle" class="text-lg font-bold text-white mb-4">Add Watch</h2>
             <form id="watchForm" onsubmit="handleFormSubmit(event)" class="space-y-3">
                 <input type="hidden" id="watchId">
-                
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Brand</label>
@@ -64,7 +63,6 @@
                         <input type="text" id="model" required placeholder="Submariner" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Category</label>
@@ -77,14 +75,13 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Current Value ($)</label>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Value ($)</label>
                         <input type="number" id="currentValue" placeholder="14500" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Movement Type</label>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Movement</label>
                         <input type="text" id="movementType" placeholder="Automatic 3235" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
@@ -93,7 +90,7 @@
                     </div>
                 </div>
 
-                <!-- New Fields Block -->
+                <!-- New Standardized Specification Fields -->
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Case Size</label>
@@ -104,7 +101,6 @@
                         <input type="text" id="lugWidth" placeholder="20mm" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Crystal Type</label>
@@ -115,7 +111,6 @@
                         <input type="text" id="bandMaterial" placeholder="Steel Oyster" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Water Resistance</label>
@@ -126,7 +121,6 @@
                         <input type="text" id="caseMaterial" placeholder="Stainless Steel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Purchase Date</label>
@@ -137,7 +131,6 @@
                         <input type="number" id="purchasePrice" placeholder="10200" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Asking Price ($)</label>
@@ -153,7 +146,6 @@
                     <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Notes</label>
                     <textarea id="description" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"></textarea>
                 </div>
-
                 <div>
                     <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Images</label>
                     <input type="file" id="imgs" accept="image/*" multiple onchange="handleImgs(event)" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500">
@@ -181,7 +173,7 @@
             <!-- Image Carousel / Gallery -->
             <div id="detImagesContainer" class="flex gap-2 overflow-x-auto no-scrollbar py-1"></div>
 
-            <!-- Financials & Core Specs Grid -->
+            <!-- Financials Grid -->
             <div class="grid grid-cols-2 gap-2 bg-slate-950 p-3 rounded-2xl border border-slate-800/80 text-xs">
                 <div><span class="text-slate-500 block uppercase text-[9px] font-bold">Est. Value</span><span id="detVal" class="text-emerald-400 font-bold text-sm"></span></div>
                 <div><span class="text-slate-500 block uppercase text-[9px] font-bold">Asking Price</span><span id="detAsking" class="text-cyan-400 font-bold text-sm"></span></div>
@@ -189,7 +181,7 @@
                 <div><span class="text-slate-500 block uppercase text-[9px] font-bold">Purchase Date</span><span id="detPurchaseDate" class="text-slate-200"></span></div>
             </div>
 
-            <!-- Detailed Specifications Grid -->
+            <!-- Specs Grid -->
             <div>
                 <h4 class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Specifications</h4>
                 <div id="detSpecsGrid" class="grid grid-cols-2 gap-1.5 bg-slate-950 p-3 rounded-2xl border border-slate-800/80 text-xs"></div>
@@ -251,9 +243,9 @@
             }
         ];
 
-        var stored = localStorage.getItem('watches_v3');
+        var stored = localStorage.getItem('watches_v4');
         var watches = stored ? JSON.parse(stored) : defaultWatches;
-        if (!stored) localStorage.setItem('watches_v3', JSON.stringify(watches));
+        if (!stored) localStorage.setItem('watches_v4', JSON.stringify(watches));
 
         var currentTempImages = [];
         var activeCategoryFilter = 'All';
@@ -357,7 +349,7 @@
             document.getElementById('detPurchaseDate').innerText = w.purchaseDate || 'N/A';
             document.getElementById('detDesc').innerText = w.description || 'No notes provided.';
 
-            // Render detailed specs grid
+            // Render specs grid
             var specsHtml = '';
             var specFields = [
                 { label: 'Case Size', val: w.caseSize },
@@ -468,7 +460,7 @@
             }
 
             try {
-                localStorage.setItem('watches_v3', JSON.stringify(watches));
+                localStorage.setItem('watches_v4', JSON.stringify(watches));
             } catch (err) {
                 alert("Storage limit reached! Try exporting a backup file to free up space.");
                 return;
@@ -511,7 +503,7 @@
         function deleteWatch(id) {
             if (confirm("Delete this watch record?")) {
                 watches = watches.filter(function(w) { return w.id !== id; });
-                localStorage.setItem('watches_v3', JSON.stringify(watches));
+                localStorage.setItem('watches_v4', JSON.stringify(watches));
                 render();
             }
         }
@@ -667,7 +659,7 @@
                     if (Array.isArray(parsed)) {
                         if (confirm("Restore " + parsed.length + " watches into your collection?")) {
                             watches = parsed;
-                            localStorage.setItem('watches_v3', JSON.stringify(watches));
+                            localStorage.setItem('watches_v4', JSON.stringify(watches));
                             render();
                             alert("Backup restored!");
                         }
@@ -689,7 +681,7 @@
             list.innerHTML = filtered.map(function(w) {
                 var imgCover = (w.images && w.images.length) ? '<img src="' + w.images[0] + '" class="w-full h-44 object-cover cursor-pointer" onclick="openDetailModal(' + w.id + ')">' : '';
 
-                // Main card specs badges (Case Size & Movement Type)
+                // Main card badges showing Case Size & Movement Type
                 var cardSpecsHtml = '<div class="flex flex-wrap gap-1.5 mt-2.5 py-1">';
                 if (w.caseSize) cardSpecsHtml += '<span class="bg-slate-950 text-slate-400 text-[10px] px-2 py-0.5 rounded-md border border-slate-800"><b class="text-slate-300">Case:</b> ' + w.caseSize + '</span>';
                 if (w.movementType) cardSpecsHtml += '<span class="bg-slate-950 text-slate-400 text-[10px] px-2 py-0.5 rounded-md border border-slate-800"><b class="text-slate-300">Movement:</b> ' + w.movementType + '</span>';
@@ -702,4 +694,4 @@
                             '<span class="bg-indigo-950/80 text-indigo-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-indigo-800/50">' + w.category + '</span>' +
                             '<span class="text-emerald-400 font-bold text-sm">' + (w.currentValue ? '$' + Number(w.currentValue).toLocaleString() : '$0') + '</span>' +
                         '</div>' +
-                        '<h3 class="text-base font-bold text-white hover:text-indigo-400">' + w.brand + ' ' + w.mod
+                        '<h3 class="text-base font-bold text-white hover:text-indigo-400">' + w.brand + ' ' + w.model + '</h
