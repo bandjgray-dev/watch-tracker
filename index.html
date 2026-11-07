@@ -158,16 +158,17 @@
     <!-- Expanded Detail Modal -->
     <div id="detailModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-4">
-            <div class="flex justify-between items-start">
-                <div>
-                    <span id="detCategory" class="bg-indigo-950/80 text-indigo-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-indigo-800/50"></span>
-                    <h2 id="detTitle" class="text-xl font-bold text-white mt-1.5"></h2>
-                </div>
+            <div class="flex justify-end items-center">
                 <button onclick="closeDetailModal()" class="bg-slate-800 text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">&times;</button>
             </div>
             
             <!-- Image Carousel / Gallery -->
             <div id="detImagesContainer" class="flex gap-2 overflow-x-auto no-scrollbar py-1"></div>
+
+            <!-- Make & Model positioned above the value section -->
+            <div>
+                <h2 id="detTitle" class="text-lg font-bold text-white tracking-wide"></h2>
+            </div>
 
             <!-- Specs Grid -->
             <div class="grid grid-cols-2 gap-2 bg-slate-950 p-3 rounded-2xl border border-slate-800/80 text-xs">
@@ -234,7 +235,7 @@
             }
         ];
 
-        var stored = localStorage.getItem('watches_v12');
+        var stored = localStorage.getItem('watches_v13');
         var watches = [];
         try {
             watches = stored ? JSON.parse(stored) : defaultWatches;
@@ -242,7 +243,7 @@
         } catch(e) {
             watches = defaultWatches;
         }
-        localStorage.setItem('watches_v12', JSON.stringify(watches));
+        localStorage.setItem('watches_v13', JSON.stringify(watches));
 
         var currentTempImages = [];
         var activeCategoryFilter = 'All';
@@ -340,7 +341,6 @@
             var w = watches.find(function(item) { return item.id === id; });
             if (!w) return;
 
-            document.getElementById('detCategory').innerText = w.category || 'General';
             document.getElementById('detTitle').innerText = (w.brand || '') + ' ' + (w.model || '');
             document.getElementById('detVal').innerText = w.currentValue ? '$' + Number(w.currentValue).toLocaleString() : '$0';
             document.getElementById('detMovement').innerText = w.movementType || 'N/A';
@@ -463,7 +463,7 @@
             }
 
             try {
-                localStorage.setItem('watches_v12', JSON.stringify(watches));
+                localStorage.setItem('watches_v13', JSON.stringify(watches));
             } catch (err) {
                 alert("Storage limit reached! Try exporting a backup file to free up space.");
                 return;
@@ -506,7 +506,7 @@
         function deleteWatch(id) {
             if (confirm("Delete this watch record?")) {
                 watches = watches.filter(function(w) { return w.id !== id; });
-                localStorage.setItem('watches_v12', JSON.stringify(watches));
+                localStorage.setItem('watches_v13', JSON.stringify(watches));
                 render();
             }
         }
@@ -653,7 +653,7 @@
                     if (Array.isArray(parsed)) {
                         if (confirm("Restore " + parsed.length + " watches into your collection?")) {
                             watches = parsed;
-                            localStorage.setItem('watches_v12', JSON.stringify(watches));
+                            localStorage.setItem('watches_v13', JSON.stringify(watches));
                             render();
                             alert("Backup restored!");
                         }
