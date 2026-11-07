@@ -95,7 +95,7 @@
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Images</label>
-                    <input type="file" id="imageInput" accept="image/*" multiple onchange="handleImageUpload(event)" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500">
+                    <input type="file" id="imgs" accept="image/*" multiple onchange="handleImgs(event)" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500">
                     <div id="imagePreviewContainer" class="flex gap-2 overflow-x-auto py-2"></div>
                 </div>
                 <div>
@@ -189,7 +189,7 @@
             render();
         }
 
-        function handleImageUpload(e) {
+        function handleImgs(e) {
             var files = e.target.files;
             for (var i = 0; i < files.length; i++) {
                 var reader = new FileReader();
@@ -203,6 +203,7 @@
 
         function renderTempImagePreviews() {
             var container = document.getElementById('imagePreviewContainer');
+            if(!container) return;
             container.innerHTML = currentTempImages.map(function(imgSrc, index) {
                 return '<div class="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden border border-slate-700">' +
                     '<img src="' + imgSrc + '" class="w-full h-full object-cover">' +
@@ -255,7 +256,13 @@
                 watches.push(watchData);
             }
 
-            localStorage.setItem('watches_v2', JSON.stringify(watches));
+            try {
+                localStorage.setItem('watches_v2', JSON.stringify(watches));
+            } catch (err) {
+                alert("Storage limit reached! Try uploading smaller photos as local storage has a 5MB browser limit.");
+                return;
+            }
+
             closeModal();
             render();
         }
