@@ -8,7 +8,6 @@
         header { display: flex; justify-content: space-between; align-items: center; background: #1e293b; color: white; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; border: 1px solid #334155; }
         button { background: #6366f1; color: white; border: none; padding: 8px 14px; border-radius: 16px; font-weight: bold; font-size: 13px; cursor: pointer; }
         
-        /* Category Filters Scroll Bar */
         .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 12px; white-space: nowrap; }
         .filter-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .filter-btn.active { background: #6366f1; color: white; border-color: #6366f1; }
@@ -30,7 +29,7 @@
 <body>
     <header>
         <h3 style="margin:0;">⌚ Watch Vault</h3>
-        <button onclick="toggleM('modal', true)">+ Add Watch</button>
+        <button onclick="openAddModal()">+ Add Watch</button>
     </header>
 
     <!-- Category Filter Bar -->
@@ -45,11 +44,12 @@
 
     <div id="list"></div>
 
-    <!-- Add Watch Modal -->
+    <!-- Add / Edit Watch Modal -->
     <div id="modal" class="modal">
         <div class="modal-box">
-            <h3 style="margin-top:0;">Add Watch</h3>
+            <h3 id="modalTitle" style="margin-top:0;">Add Watch</h3>
             <form onsubmit="saveW(event)">
+                <input type="hidden" id="watchId">
                 <label>Brand</label><input type="text" id="brand" required placeholder="Rolex">
                 <label>Model</label><input type="text" id="model" required placeholder="Submariner">
                 <label>Category</label>
@@ -78,13 +78,13 @@
             </form>
         </div>
     </div>
-    <!-- Selective Share & PDF Report Modal -->
+        <!-- Selective Share & PDF Report Modal -->
     <div id="shareModal" class="modal">
         <div class="modal-box">
             <h3 style="margin-top:0;">Share / PDF Report Options</h3>
             <div id="shareChkBox"></div>
             <div style="display:flex; flex-direction:column; gap:8px; margin-top:14px;">
-                <button type="button" onclick="doShare(false)">Share Text Only</button>
+                <button type="button" onclick="doShare()">Share Text Only</button>
                 <button type="button" onclick="generatePDF()" style="background:#0ea5e9;">Download PDF Report</button>
                 <button type="button" onclick="toggleM('shareModal', false)" style="background:#475569;">Cancel</button>
             </div>
@@ -102,7 +102,42 @@
 
         function toggleM(id, show) {
             document.getElementById(id).className = show ? 'modal open' : 'modal';
-            if(!show && id === 'modal') { tempImgs = []; document.getElementById('imgPrev').innerHTML = ''; document.getElementById('customBox').innerHTML = ''; }
+        }
+
+        function openAddModal() {
+            document.getElementById('modalTitle').innerText = 'Add Watch';
+            document.getElementById('watchId').value = '';
+            document.querySelector('#modal form').reset();
+            tempImgs = [];
+            document.getElementById('imgPrev').innerHTML = '';
+            document.getElementById('customBox').innerHTML = '';
+            toggleM('modal', true);
+        }
+
+        function openEditModal(id) {
+            var x = W.find(function(w){ return w.id === id; });
+            if(!x) return;
+            document.getElementById('modalTitle').innerText = 'Edit Watch';
+            document.getElementById('watchId').value = x.id;
+            document.getElementById('brand').value = x.b || '';
+            document.getElementById('model').value = x.m || '';
+            document.getElementById('cat').value = x.c || 'Diver';
+            document.getElementById('val').value = x.v || '';
+            document.getElementById('mov').value = x.mov || '';
+            document.getElementById('sn').value = x.sn || '';
+            document.getElementById('notes').value = x.n || '';
+            
+            tempImgs = x.imgs || [];
+            renderImgs();
+
+            var customBox = document.getElementById('customBox');
+            customBox.innerHTML = '';
+            if(x.cust) {
+                Object.keys(x.cust).forEach(function(k){
+                    addCustomRow(k, x.cust[k]);
+                });
+            }
+            toggleM('modal', true);
         }
 
         function setFilter(cat, btn) {
@@ -125,7 +160,9 @@
         }
 
         function renderImgs() {
-            document.getElementById('imgPrev').innerHTML = tempImgs.map(function(src){ return '<img src="'+src+'">'; }).join('');
+            document.getElementById('imgPrev').innerHTML = tempImgs.map(function(src, index){ 
+                return '<div style="position:relative;"><img src="'+src+'"><button type="button" onclick="tempImgs.splice('+index+',1);renderImgs();" style="position:absolute; top:-4px; right:-4px; background:#ef4444; border-radius:50%; width:18px; height:18px; font-size:10px; padding:0; line-height:18px; text-align:center;">&times;</button></div>'; 
+            }).join('');
         }
 
         function addCustomRow(k, v) {
@@ -137,13 +174,14 @@
 
         function saveW(e) {
             e.preventDefault();
+            var id = document.getElementById('watchId').value;
             var custom = {};
             var keys = document.querySelectorAll('.ckey');
             var vals = document.querySelectorAll('.cval');
             keys.forEach(function(k, i){ if(k.value.trim()) custom[k.value.trim()] = vals[i].value.trim(); });
 
-            W.push({
-                id: Date.now(),
+            var watchData = {
+                id: id ? Number(id) : Date.now(),
                 b: document.getElementById('brand').value,
                 m: document.getElementById('model').value,
                 c: document.getElementById('cat').value,
@@ -153,9 +191,16 @@
                 n: document.getElementById('notes').value,
                 imgs: tempImgs,
                 cust: custom
-            });
+            };
+
+            if(id) {
+                var idx = W.findIndex(function(w){ return w.id === Number(id); });
+                if(idx !== -1) W[idx] = watchData;
+            } else {
+                W.push(watchData);
+            }
+
             localStorage.setItem('W', JSON.stringify(W));
-            e.target.reset();
             toggleM('modal', false);
             render();
         }
@@ -237,11 +282,7 @@
                 pdfHtml += '</div>';
             }
 
-            var printArea = document.getElementById('pdfPrintArea');
-            printArea.innerHTML = pdfHtml;
             toggleM('shareModal', false);
-            
-            // Open clean print window allowing user to save as PDF on mobile
             var win = window.open('', '', 'height=700,width=700');
             win.document.write('<html><head><title>Watch Report - ' + x.b + ' ' + x.m + '</title></head><body>');
             win.document.write(pdfHtml);
@@ -264,14 +305,17 @@
                 var imgHtml = (x.imgs && x.imgs.length) ? '<img src="'+x.imgs[0]+'" class="card-img">' : '';
                 return '<div class="card">' + imgHtml +
                     '<div class="card-body">' +
-                        '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                        '<div style="display:flex; justify-content:space-between; align-items:center;" onclick="openEditModal('+x.id+')">' +
                             '<span style="font-size:11px; background:#312e81; color:#c7d2fe; padding:2px 6px; border-radius:8px; font-weight:bold;">'+x.c+'</span>' +
                             '<b style="font-size:14px; color:#34d399;">$'+(x.v || '0')+'</b>' +
                         '</div>' +
-                        '<h3 style="margin:6px 0 2px 0; font-size:16px;">'+x.b+' '+x.m+'</h3>' +
+                        '<h3 style="margin:6px 0 2px 0; font-size:16px; cursor:pointer;" onclick="openEditModal('+x.id+')">'+x.b+' '+x.m+'</h3>' +
                         '<p style="font-size:12px; color:#94a3b8; margin:0 0 10px 0;">'+(x.n || 'No notes')+'</p>' +
                         '<div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #334155; padding-top:8px;">' +
-                            '<button onclick="openShare('+x.id+')" style="background:#475569; padding:4px 10px; font-size:11px;">Share / PDF</button>' +
+                            '<div>' +
+                                '<button onclick="openEditModal('+x.id+')" style="background:#334155; padding:4px 10px; font-size:11px; margin-right:4px;">Edit</button>' +
+                                '<button onclick="openShare('+x.id+')" style="background:#475569; padding:4px 10px; font-size:11px;">Share / PDF</button>' +
+                            '</div>' +
                             '<button onclick="delW('+x.id+')" style="background:#ef4444; padding:4px 10px; font-size:11px;">Delete</button>' +
                         '</div>' +
                     '</div>' +
