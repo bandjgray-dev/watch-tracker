@@ -1,385 +1,482 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watch Vault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; background: #090d16; margin: 0; padding: 16px; color: #f8fafc; }
-        header { display: flex; justify-content: space-between; align-items: center; background: #1e293b; color: white; padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; border: 1px solid #334155; }
-        button { background: #6366f1; color: white; border: none; padding: 8px 14px; border-radius: 16px; font-weight: bold; font-size: 13px; cursor: pointer; }
-        
-        .filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 12px; white-space: nowrap; }
-        .filter-btn { background: #1e293b; color: #94a3b8; border: 1px solid #334155; padding: 6px 14px; border-radius: 16px; font-size: 12px; font-weight: bold; cursor: pointer; }
-        .filter-btn.active { background: #6366f1; color: white; border-color: #6366f1; }
-
-        .backup-bar { display: flex; gap: 8px; margin-bottom: 16px; }
-        .backup-bar button { background: #334155; font-size: 11px; padding: 6px 10px; flex: 1; }
-
-        .card { background: #1e293b; border-radius: 10px; margin-bottom: 12px; border: 1px solid #334155; overflow: hidden; }
-        .card-img { width: 100%; height: 160px; object-fit: cover; background: #0f172a; }
-        .card-body { padding: 14px; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); justify-content: center; align-items: center; padding: 16px; z-index: 50; }
-        .modal.open { display: flex; }
-        .modal-box { background: #1e293b; color: #f8fafc; padding: 18px; border-radius: 14px; width: 100%; max-width: 380px; max-height: 85vh; overflow-y: auto; border: 1px solid #334155; }
-        input, select, textarea { width: 100%; padding: 8px; margin: 4px 0 10px 0; border: 1px solid #475569; border-radius: 6px; box-sizing: border-box; font-size: 14px; background: #0f172a; color: #f8fafc; }
-        label { font-size: 11px; font-weight: bold; color: #94a3b8; text-transform: uppercase; }
-        .img-prev { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; }
-        .img-prev img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #475569; }
-        .chk-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; color: #cbd5e1; }
-        .chk-row input { width: auto; margin: 0; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body>
-    <header>
-        <h3 style="margin:0;">⌚ Watch Vault</h3>
-        <button onclick="openAddModal()">+ Add Watch</button>
-    </header>
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-12 font-sans antialiased">
+    <div class="max-w-md mx-auto px-4 py-4 space-y-4">
 
-    <!-- Backup & Restore Toolbar -->
-    <div class="backup-bar">
-        <button onclick="exportBackup()">📥 Export Backup File</button>
-        <button onclick="document.getElementById('importFile').click()">📤 Restore Backup</button>
-        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importBackup(event)">
+        <!-- Top Header & Actions -->
+        <header class="flex items-center justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg">
+            <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2">
+                <span>⌚</span> Watch Vault
+            </h1>
+            <button onclick="openModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-4 py-2 rounded-full shadow-md active:scale-95 transition-all">
+                + Add Watch
+            </button>
+        </header>
+
+        <!-- Backup & Restore Bar -->
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="exportBackup()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium text-xs py-2 rounded-xl text-center active:scale-95 transition-all">
+                📥 Export Backup
+            </button>
+            <button onclick="document.getElementById('importFile').click()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium text-xs py-2 rounded-xl text-center active:scale-95 transition-all">
+                📤 Restore Backup
+            </button>
+            <input type="file" id="importFile" accept=".json" class="hidden" onchange="importBackup(event)">
+        </div>
+
+        <!-- Horizontal Scroll Category Bar -->
+        <div class="flex gap-2 overflow-x-auto no-scrollbar py-1" id="catFilters">
+            <button onclick="setFilter('All', this)" class="filter-btn active bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-indigo-500 shadow-sm transition-all">All</button>
+            <button onclick="setFilter('Diver', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Diver</button>
+            <button onclick="setFilter('Dress', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Dress</button>
+            <button onclick="setFilter('Chronograph', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Chronograph</button>
+            <button onclick="setFilter('Field', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Field</button>
+            <button onclick="setFilter('Vintage', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Vintage</button>
+        </div>
+
+        <!-- Watch Cards Container -->
+        <div id="watchList" class="space-y-4"></div>
     </div>
-
-    <!-- Category Filter Bar -->
-    <div class="filters" id="catFilters">
-        <button class="filter-btn active" onclick="setFilter('All', this)">All</button>
-        <button class="filter-btn" onclick="setFilter('Diver', this)">Diver</button>
-        <button class="filter-btn" onclick="setFilter('Dress', this)">Dress</button>
-        <button class="filter-btn" onclick="setFilter('Chronograph', this)">Chronograph</button>
-        <button class="filter-btn" onclick="setFilter('Field', this)">Field</button>
-        <button class="filter-btn" onclick="setFilter('Vintage', this)">Vintage</button>
-    </div>
-
-    <div id="list"></div>
-
-    <!-- Add / Edit Watch Modal -->
-    <div id="modal" class="modal">
-        <div class="modal-box">
-            <h3 id="modalTitle" style="margin-top:0;">Add Watch</h3>
-            <form onsubmit="saveW(event)">
+        <!-- Add / Edit Watch Modal -->
+    <div id="watchModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
+            <h2 id="modalTitle" class="text-lg font-bold text-white mb-4">Add Watch</h2>
+            <form id="watchForm" onsubmit="handleFormSubmit(event)" class="space-y-3">
                 <input type="hidden" id="watchId">
-                <label>Brand</label><input type="text" id="brand" required placeholder="Rolex">
-                <label>Model</label><input type="text" id="model" required placeholder="Submariner">
-                <label>Category</label>
-                <select id="cat">
-                    <option>Diver</option><option>Dress</option><option>Chronograph</option><option>Field</option><option>Vintage</option>
-                </select>
-                <label>Est. Value ($)</label><input type="number" id="val">
-                <label>Movement</label><input type="text" id="mov" placeholder="Automatic">
-                <label>Serial No.</label><input type="text" id="sn">
-                <label>Notes</label><textarea id="notes" rows="2"></textarea>
-                
-                <label>Images</label>
-                <input type="file" id="imgs" accept="image/*" multiple onchange="handleImgs(event)">
-                <div id="imgPrev" class="img-prev"></div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <label>Custom Fields</label>
-                    <button type="button" onclick="addCustomRow()" style="background:none; color:#818cf8; padding:0;">+ Add Field</button>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Brand</label>
+                        <input type="text" id="brand" required placeholder="Rolex" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Model</label>
+                        <input type="text" id="model" required placeholder="Submariner" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
                 </div>
-                <div id="customBox"></div>
-
-                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:12px;">
-                    <button type="button" onclick="toggleM('modal', false)" style="background:#475569;">Cancel</button>
-                    <button type="submit">Save Watch</button>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Category</label>
+                        <select id="category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                            <option value="Diver">Diver</option>
+                            <option value="Dress">Dress</option>
+                            <option value="Chronograph">Chronograph</option>
+                            <option value="Field">Field</option>
+                            <option value="Vintage">Vintage</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Value ($)</label>
+                        <input type="number" id="currentValue" placeholder="14500" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Movement</label>
+                        <input type="text" id="movementType" placeholder="Automatic 3235" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Serial Number</label>
+                        <input type="text" id="serialNumber" placeholder="X829F114" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Notes</label>
+                    <textarea id="description" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Images</label>
+                    <input type="file" id="imageInput" accept="image/*" multiple onchange="handleImageUpload(event)" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500">
+                    <div id="imagePreviewContainer" class="flex gap-2 overflow-x-auto py-2"></div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Custom Fields</label>
+                        <button type="button" onclick="addCustomFieldRow()" class="text-xs text-indigo-400 font-semibold hover:text-indigo-300">+ Add Field</button>
+                    </div>
+                    <div id="customFieldsBox" class="space-y-2"></div>
+                </div>
+                <div class="flex justify-end gap-2 pt-3">
+                    <button type="button" onclick="closeModal()" class="bg-slate-800 text-slate-300 font-semibold text-xs px-4 py-2.5 rounded-xl">Cancel</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-md">Save Watch</button>
                 </div>
             </form>
         </div>
     </div>
-        <!-- Selective Share & PDF Report Modal -->
-    <div id="shareModal" class="modal">
-        <div class="modal-box">
-            <h3 style="margin-top:0;">Share / PDF Report</h3>
-            <div id="shareChkBox"></div>
-            <div style="display:flex; flex-direction:column; gap:8px; margin-top:14px;">
-                <button type="button" onclick="doShare()">Share Text (Text/WhatsApp)</button>
-                <button type="button" onclick="emailReport()" style="background:#3b82f6;">Email Report</button>
-                <button type="button" onclick="generatePDF()" style="background:#0ea5e9;">Download PDF Report</button>
-                <button type="button" onclick="toggleM('shareModal', false)" style="background:#475569;">Cancel</button>
+        <!-- Share & PDF Report Modal -->
+    <div id="shareModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4">
+            <h3 class="text-base font-bold text-white">Share / Export Options</h3>
+            <div id="shareOptionsBox" class="space-y-2 max-h-48 overflow-y-auto text-xs text-slate-300 pr-1"></div>
+            <div class="flex flex-col gap-2 pt-2">
+                <button type="button" onclick="executeShareText()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs py-2.5 rounded-xl">Share Text (SMS / App)</button>
+                <button type="button" onclick="executeEmailReport()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2.5 rounded-xl">Email Details</button>
+                <button type="button" onclick="executeGeneratePDF()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs py-2.5 rounded-xl">Download PDF Report</button>
+                <button type="button" onclick="closeShareModal()" class="w-full bg-slate-950 text-slate-400 font-semibold text-xs py-2 rounded-xl mt-1">Cancel</button>
             </div>
         </div>
     </div>
 
-    <script>
-        var W = JSON.parse(localStorage.getItem('W') || '[]');
-        var tempImgs = [];
-        var activeShareId = null;
-        var activeCat = 'All';
+    <!-- Hidden PDF Printing Container -->
+    <div id="pdfPrintArea" class="hidden bg-white text-black p-8 font-sans"></div>
+        <script>
+        var defaultWatches = [
+            {
+                id: 101,
+                brand: "Rolex",
+                model: "Submariner Date",
+                category: "Diver",
+                currentValue: "14500",
+                movementType: "Automatic (3235)",
+                serialNumber: "X829F114",
+                description: "Black dial, Cerachrom bezel. Daily driver.",
+                images: ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80"],
+                customFields: { "Water Resistance": "300m", "Case Diameter": "41mm" }
+            },
+            {
+                id: 102,
+                brand: "Omega",
+                model: "Speedmaster Pro",
+                category: "Chronograph",
+                currentValue: "6800",
+                movementType: "Manual (3861)",
+                serialNumber: "78912345",
+                description: "Hesalite Moonwatch with steel bracelet.",
+                images: ["https://images.unsplash.com/photo-1547996160-81dfa63595aa?w=600&auto=format&fit=crop&q=80"],
+                customFields: { "Lug Width": "20mm", "Crystal": "Hesalite" }
+            }
+        ];
 
-        function exportBackup() {
-            var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(W));
-            var dlAnchor = document.createElement('a');
-            dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", "watch_vault_backup_" + new Date().toISOString().slice(0,10) + ".json");
-            document.body.appendChild(dlAnchor);
-            dlAnchor.click();
-            dlAnchor.remove();
-        }
+        var stored = localStorage.getItem('watches_v2');
+        var watches = stored ? JSON.parse(stored) : defaultWatches;
+        if (!stored) localStorage.setItem('watches_v2', JSON.stringify(watches));
 
-        function importBackup(e) {
-            var file = e.target.files[0];
-            if(!file) return;
-            var reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    var parsed = JSON.parse(evt.target.result);
-                    if(Array.isArray(parsed)) {
-                        if(confirm("Restore " + parsed.length + " watches? This will merge/update your collection.")) {
-                            W = parsed;
-                            localStorage.setItem('W', JSON.stringify(W));
-                            render();
-                            alert("Backup restored successfully!");
-                        }
-                    } else {
-                        alert("Invalid backup file format.");
-                    }
-                } catch(err) {
-                    alert("Error reading backup file.");
-                }
-            };
-            reader.readAsText(file);
-        }
+        var currentTempImages = [];
+        var activeCategoryFilter = 'All';
+        var activeShareWatchId = null;
 
-        function toggleM(id, show) {
-            document.getElementById(id).className = show ? 'modal open' : 'modal';
-        }
-
-        function openAddModal() {
+        function openModal() {
             document.getElementById('modalTitle').innerText = 'Add Watch';
             document.getElementById('watchId').value = '';
-            document.querySelector('#modal form').reset();
-            tempImgs = [];
-            document.getElementById('imgPrev').innerHTML = '';
-            document.getElementById('customBox').innerHTML = '';
-            toggleM('modal', true);
+            document.getElementById('watchForm').reset();
+            currentTempImages = [];
+            renderTempImagePreviews();
+            document.getElementById('customFieldsBox').innerHTML = '';
+            document.getElementById('watchModal').classList.remove('hidden');
+            document.getElementById('watchModal').classList.add('flex');
         }
 
-        function openEditModal(id) {
-            var x = W.find(function(w){ return w.id === id; });
-            if(!x) return;
-            document.getElementById('modalTitle').innerText = 'Edit Watch';
-            document.getElementById('watchId').value = x.id;
-            document.getElementById('brand').value = x.b || '';
-            document.getElementById('model').value = x.m || '';
-            document.getElementById('cat').value = x.c || 'Diver';
-            document.getElementById('val').value = x.v || '';
-            document.getElementById('mov').value = x.mov || '';
-            document.getElementById('sn').value = x.sn || '';
-            document.getElementById('notes').value = x.n || '';
-            
-            tempImgs = x.imgs || [];
-            renderImgs();
-
-            var customBox = document.getElementById('customBox');
-            customBox.innerHTML = '';
-            if(x.cust) {
-                Object.keys(x.cust).forEach(function(k){
-                    addCustomRow(k, x.cust[k]);
-                });
-            }
-            toggleM('modal', true);
+        function closeModal() {
+            document.getElementById('watchModal').classList.add('hidden');
+            document.getElementById('watchModal').classList.remove('flex');
         }
 
-        function setFilter(cat, btn) {
-            activeCat = cat;
-            document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
-            btn.classList.add('active');
+        function setFilter(category, element) {
+            activeCategoryFilter = category;
+            document.querySelectorAll('.filter-btn').forEach(function(btn) {
+                btn.className = 'filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all';
+            });
+            element.className = 'filter-btn active bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-indigo-500 shadow-sm transition-all';
             render();
         }
 
-        function handleImgs(e) {
+        function handleImageUpload(e) {
             var files = e.target.files;
-            for(var i=0; i<files.length; i++) {
-                var r = new FileReader();
-                r.onload = function(evt) {
-                    tempImgs.push(evt.target.result);
-                    renderImgs();
+            for (var i = 0; i < files.length; i++) {
+                var reader = new FileReader();
+                reader.onload = function(evt) {
+                    currentTempImages.push(evt.target.result);
+                    renderTempImagePreviews();
                 };
-                r.readAsDataURL(files[i]);
+                reader.readAsDataURL(files[i]);
             }
         }
 
-        function renderImgs() {
-            document.getElementById('imgPrev').innerHTML = tempImgs.map(function(src, index){ 
-                return '<div style="position:relative;"><img src="'+src+'"><button type="button" onclick="tempImgs.splice('+index+',1);renderImgs();" style="position:absolute; top:-4px; right:-4px; background:#ef4444; border-radius:50%; width:18px; height:18px; font-size:10px; padding:0; line-height:18px; text-align:center;">&times;</button></div>'; 
+        function renderTempImagePreviews() {
+            var container = document.getElementById('imagePreviewContainer');
+            container.innerHTML = currentTempImages.map(function(imgSrc, index) {
+                return '<div class="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden border border-slate-700">' +
+                    '<img src="' + imgSrc + '" class="w-full h-full object-cover">' +
+                    '<button type="button" onclick="removeTempImage(' + index + ')" class="absolute top-0 right-0 bg-red-600 text-white w-4 h-4 rounded-bl flex items-center justify-center text-[10px] font-bold">&times;</button>' +
+                '</div>';
             }).join('');
         }
 
-        function addCustomRow(k, v) {
-            var d = document.createElement('div');
-            d.style.display = 'flex'; d.style.gap = '6px'; d.style.marginBottom = '6px';
-            d.innerHTML = '<input type="text" placeholder="Field" value="'+(k||'')+'" class="ckey" style="margin:0;"><input type="text" placeholder="Value" value="'+(v||'')+'" class="cval" style="margin:0;"><button type="button" onclick="this.parentElement.remove()" style="background:#ef4444; padding:0 8px;">&times;</button>';
-            document.getElementById('customBox').appendChild(d);
+        function removeTempImage(index) {
+            currentTempImages.splice(index, 1);
+            renderTempImagePreviews();
         }
 
-        function saveW(e) {
+        function addCustomFieldRow(key, value) {
+            var box = document.getElementById('customFieldsBox');
+            var div = document.createElement('div');
+            div.className = 'flex gap-2 items-center';
+            div.innerHTML = '<input type="text" placeholder="Key (e.g. Bezel)" value="' + (key || '') + '" class="custom-key flex-1 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">' +
+                '<input type="text" placeholder="Value (e.g. Ceramic)" value="' + (value || '') + '" class="custom-val flex-1 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">' +
+                '<button type="button" onclick="this.parentElement.remove()" class="bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white px-2 py-1 rounded-lg text-xs font-bold">&times;</button>';
+            box.appendChild(div);
+        }
+                    function handleFormSubmit(e) {
             e.preventDefault();
             var id = document.getElementById('watchId').value;
-            var custom = {};
-            var keys = document.querySelectorAll('.ckey');
-            var vals = document.querySelectorAll('.cval');
-            keys.forEach(function(k, i){ if(k.value.trim()) custom[k.value.trim()] = vals[i].value.trim(); });
+            var customFields = {};
+            var keys = document.querySelectorAll('.custom-key');
+            var vals = document.querySelectorAll('.custom-val');
+            keys.forEach(function(kInput, i) {
+                if (kInput.value.trim()) customFields[kInput.value.trim()] = vals[i].value.trim();
+            });
 
             var watchData = {
                 id: id ? Number(id) : Date.now(),
-                b: document.getElementById('brand').value,
-                m: document.getElementById('model').value,
-                c: document.getElementById('cat').value,
-                v: document.getElementById('val').value,
-                mov: document.getElementById('mov').value,
-                sn: document.getElementById('sn').value,
-                n: document.getElementById('notes').value,
-                imgs: tempImgs,
-                cust: custom
+                brand: document.getElementById('brand').value,
+                model: document.getElementById('model').value,
+                category: document.getElementById('category').value,
+                currentValue: document.getElementById('currentValue').value,
+                movementType: document.getElementById('movementType').value,
+                serialNumber: document.getElementById('serialNumber').value,
+                description: document.getElementById('description').value,
+                images: currentTempImages,
+                customFields: customFields
             };
 
-            if(id) {
-                var idx = W.findIndex(function(w){ return w.id === Number(id); });
-                if(idx !== -1) W[idx] = watchData;
+            if (id) {
+                var idx = watches.findIndex(function(w) { return w.id === Number(id); });
+                if (idx !== -1) watches[idx] = watchData;
             } else {
-                W.push(watchData);
+                watches.push(watchData);
             }
 
-            localStorage.setItem('W', JSON.stringify(W));
-            toggleM('modal', false);
+            localStorage.setItem('watches_v2', JSON.stringify(watches));
+            closeModal();
             render();
         }
 
-        function delW(id) {
-            if(confirm("Delete watch?")) { W = W.filter(function(x){ return x.id !== id; }); localStorage.setItem('W', JSON.stringify(W)); render(); }
-        }
+        function editWatch(id) {
+            var w = watches.find(function(item) { return item.id === id; });
+            if (!w) return;
+            document.getElementById('modalTitle').innerText = 'Edit Watch';
+            document.getElementById('watchId').value = w.id;
+            document.getElementById('brand').value = w.brand || '';
+            document.getElementById('model').value = w.model || '';
+            document.getElementById('category').value = w.category || 'Diver';
+            document.getElementById('currentValue').value = w.currentValue || '';
+            document.getElementById('movementType').value = w.movementType || '';
+            document.getElementById('serialNumber').value = w.serialNumber || '';
+            document.getElementById('description').value = w.description || '';
 
-        function openShare(id) {
-            activeShareId = id;
-            var x = W.find(function(w){ return w.id === id; });
-            if(!x) return;
-            var html = '';
-            var fields = [
-                {k:'b', label:'Brand & Model', val: x.b + ' ' + x.m, def: true},
-                {k:'c', label:'Category', val: x.c, def: true},
-                {k:'v', label:'Estimated Value', val: '$' + (x.v || 'N/A'), def: true},
-                {k:'mov', label:'Movement', val: x.mov, def: true},
-                {k:'sn', label:'Serial Number', val: x.sn, def: false},
-                {k:'n', label:'Notes', val: x.n, def: false}
-            ];
-            fields.forEach(function(f){
-                if(f.val) html += '<label class="chk-row"><input type="checkbox" id="sc_'+f.k+'" '+(f.def?'checked':'')+'><span>'+f.label+': '+f.val+'</span></label>';
-            });
-            if(x.cust) {
-                Object.keys(x.cust).forEach(function(ck){
-                    html += '<label class="chk-row"><input type="checkbox" class="sc_cust" data-k="'+ck+'" data-v="'+x.cust[ck]+'" checked><span>'+ck+': '+x.cust[ck]+'</span></label>';
+            currentTempImages = w.images ? [...w.images] : [];
+            renderTempImagePreviews();
+
+            var box = document.getElementById('customFieldsBox');
+            box.innerHTML = '';
+            if (w.customFields) {
+                Object.keys(w.customFields).forEach(function(k) {
+                    addCustomFieldRow(k, w.customFields[k]);
                 });
             }
-            document.getElementById('shareChkBox').innerHTML = html;
-            toggleM('shareModal', true);
+
+            document.getElementById('watchModal').classList.remove('hidden');
+            document.getElementById('watchModal').classList.add('flex');
         }
 
-        function buildShareText() {
-            var x = W.find(function(w){ return w.id === activeShareId; });
-            if(!x) return '';
+        function deleteWatch(id) {
+            if (confirm("Delete this watch record?")) {
+                watches = watches.filter(function(w) { return w.id !== id; });
+                localStorage.setItem('watches_v2', JSON.stringify(watches));
+                render();
+            }
+        }
+
+        function openShareModal(id) {
+            activeShareWatchId = id;
+            var w = watches.find(function(item) { return item.id === id; });
+            if (!w) return;
+
+            var box = document.getElementById('shareOptionsBox');
+            var html = '';
+            var items = [
+                { id: 'sb_brand', label: 'Watch Name', val: w.brand + ' ' + w.model, def: true },
+                { id: 'sb_cat', label: 'Category', val: w.category, def: true },
+                { id: 'sb_val', label: 'Estimated Value', val: '$' + (w.currentValue || 'N/A'), def: true },
+                { id: 'sb_mov', label: 'Movement', val: w.movementType, def: true },
+                { id: 'sb_sn', label: 'Serial No.', val: w.serialNumber, def: false },
+                { id: 'sb_desc', label: 'Notes', val: w.description, def: false }
+            ];
+
+            items.forEach(function(item) {
+                if (item.val) {
+                    html += '<label class="flex items-center gap-2 cursor-pointer hover:text-white"><input type="checkbox" id="' + item.id + '" ' + (item.def ? 'checked' : '') + ' class="rounded accent-indigo-600"><span>' + item.label + ': ' + item.val + '</span></label>';
+                }
+            });
+
+            if (w.customFields) {
+                Object.keys(w.customFields).forEach(function(k) {
+                    html += '<label class="flex items-center gap-2 cursor-pointer hover:text-white"><input type="checkbox" class="sc_cust" data-k="' + k + '" data-v="' + w.customFields[k] + '" checked class="rounded accent-indigo-600"><span>' + k + ': ' + w.customFields[k] + '</span></label>';
+                });
+            }
+
+            box.innerHTML = html;
+            document.getElementById('shareModal').classList.remove('hidden');
+            document.getElementById('shareModal').classList.add('flex');
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').classList.add('hidden');
+            document.getElementById('shareModal').classList.remove('flex');
+        }
+
+        function buildShareTextPayload() {
+            var w = watches.find(function(item) { return item.id === activeShareWatchId; });
+            if (!w) return '';
             var txt = "⌚ Watch Details Report\n";
-            if(document.getElementById('sc_b') && document.getElementById('sc_b').checked) txt += "Watch: " + x.b + " " + x.m + "\n";
-            if(document.getElementById('sc_c') && document.getElementById('sc_c').checked) txt += "Category: " + x.c + "\n";
-            if(document.getElementById('sc_v') && document.getElementById('sc_v').checked) txt += "Value: $" + (x.v || 'N/A') + "\n";
-            if(document.getElementById('sc_mov') && document.getElementById('sc_mov').checked) txt += "Movement: " + (x.mov || 'N/A') + "\n";
-            if(document.getElementById('sc_sn') && document.getElementById('sc_sn').checked) txt += "Serial: " + (x.sn || 'N/A') + "\n";
-            if(document.getElementById('sc_n') && document.getElementById('sc_n').checked) txt += "Notes: " + (x.n || 'None') + "\n";
-            
-            document.querySelectorAll('.sc_cust').forEach(function(el){
-                if(el.checked) txt += el.getAttribute('data-k') + ": " + el.getAttribute('data-v') + "\n";
+            if (document.getElementById('sb_brand') && document.getElementById('sb_brand').checked) txt += "Watch: " + w.brand + " " + w.model + "\n";
+            if (document.getElementById('sb_cat') && document.getElementById('sb_cat').checked) txt += "Category: " + w.category + "\n";
+            if (document.getElementById('sb_val') && document.getElementById('sb_val').checked) txt += "Est. Value: $" + (w.currentValue || 'N/A') + "\n";
+            if (document.getElementById('sb_mov') && document.getElementById('sb_mov').checked) txt += "Movement: " + (w.movementType || 'N/A') + "\n";
+            if (document.getElementById('sb_sn') && document.getElementById('sb_sn').checked) txt += "Serial: " + (w.serialNumber || 'N/A') + "\n";
+            if (document.getElementById('sb_desc') && document.getElementById('sb_desc').checked) txt += "Notes: " + (w.description || 'None') + "\n";
+
+            document.querySelectorAll('.sc_cust').forEach(function(el) {
+                if (el.checked) txt += el.getAttribute('data-k') + ": " + el.getAttribute('data-v') + "\n";
             });
             return txt;
         }
 
-        function doShare() {
-            var x = W.find(function(w){ return w.id === activeShareId; });
-            if(!x) return;
-            var txt = buildShareText();
-            toggleM('shareModal', false);
-            if(navigator.share) navigator.share({title: x.b + " " + x.m, text: txt});
-            else prompt("Copy details to share:", txt);
+        function executeShareText() {
+            var w = watches.find(function(item) { return item.id === activeShareWatchId; });
+            var txt = buildShareTextPayload();
+            closeShareModal();
+            if (navigator.share) navigator.share({ title: w.brand + " " + w.model, text: txt });
+            else prompt("Copy report to share:", txt);
         }
 
-        function emailReport() {
-            var x = W.find(function(w){ return w.id === activeShareId; });
-            if(!x) return;
-            var txt = buildShareText();
-            toggleM('shareModal', false);
-            var subject = encodeURIComponent("Watch Details: " + x.b + " " + x.m);
-            var body = encodeURIComponent(txt);
-            window.location.href = "mailto:?subject=" + subject + "&body=" + body;
+        function executeEmailReport() {
+            var w = watches.find(function(item) { return item.id === activeShareWatchId; });
+            var txt = buildShareTextPayload();
+            closeShareModal();
+            window.location.href = "mailto:?subject=" + encodeURIComponent("Watch Specification: " + w.brand + " " + w.model) + "&body=" + encodeURIComponent(txt);
         }
 
-        function generatePDF() {
-            var x = W.find(function(w){ return w.id === activeShareId; });
-            if(!x) return;
-            
-            var pdfHtml = '<h1 style="color:#0f172a; border-bottom:2px solid #cbd5e1; padding-bottom:8px;">Watch Vault Record Report</h1>';
-            pdfHtml += '<h2 style="color:#334155; margin-top:16px;">'+x.b+' '+x.m+'</h2>';
-            pdfHtml += '<p><strong>Category:</strong> '+x.c+'</p>';
-            if(x.v) pdfHtml += '<p><strong>Estimated Value:</strong> $'+x.v+'</p>';
-            if(x.mov) pdfHtml += '<p><strong>Movement:</strong> '+x.mov+'</p>';
-            if(x.sn) pdfHtml += '<p><strong>Serial Number:</strong> '+x.sn+'</p>';
-            if(x.n) pdfHtml += '<p><strong>Notes:</strong> '+x.n+'</p>';
-            
-            if(x.cust && Object.keys(x.cust).length) {
+        function executeGeneratePDF() {
+            var w = watches.find(function(item) { return item.id === activeShareWatchId; });
+            if (!w) return;
+
+            var pdfHtml = '<div style="font-family:sans-serif; padding:20px; max-width:600px; margin:auto;">' +
+                '<h1 style="border-bottom:2px solid #cbd5e1; padding-bottom:8px; color:#0f172a;">Watch Vault Record Report</h1>' +
+                '<h2 style="color:#475569; margin-top:16px;">' + w.brand + ' ' + w.model + '</h2>' +
+                '<p><strong>Category:</strong> ' + w.category + '</p>' +
+                '<p><strong>Estimated Value:</strong> $' + (w.currentValue || 'N/A') + '</p>' +
+                '<p><strong>Movement:</strong> ' + (w.movementType || 'N/A') + '</p>' +
+                '<p><strong>Serial Number:</strong> ' + (w.serialNumber || 'N/A') + '</p>' +
+                '<p><strong>Notes:</strong> ' + (w.description || 'N/A') + '</p>';
+
+            if (w.customFields && Object.keys(w.customFields).length) {
                 pdfHtml += '<h3>Custom Specifications</h3><ul>';
-                Object.keys(x.cust).forEach(function(k){
-                    pdfHtml += '<li><strong>'+k+':</strong> '+x.cust[k]+'</li>';
+                Object.keys(w.customFields).forEach(function(k) {
+                    pdfHtml += '<li><strong>' + k + ':</strong> ' + w.customFields[k] + '</li>';
                 });
                 pdfHtml += '</ul>';
             }
 
-            if(x.imgs && x.imgs.length) {
+            if (w.images && w.images.length) {
                 pdfHtml += '<h3>Attached Photos</h3><div style="display:flex; flex-wrap:wrap; gap:10px;">';
-                x.imgs.forEach(function(img){
-                    pdfHtml += '<img src="'+img+'" style="width:200px; height:150px; object-fit:cover; border-radius:8px; border:1px solid #cbd5e1;">';
+                w.images.forEach(function(img) {
+                    pdfHtml += '<img src="' + img + '" style="width:180px; height:130px; object-fit:cover; border-radius:8px; border:1px solid #cbd5e1;">';
                 });
                 pdfHtml += '</div>';
             }
+            pdfHtml += '</div>';
 
-            toggleM('shareModal', false);
-            var win = window.open('', '', 'height=700,width=700');
-            win.document.write('<html><head><title>Watch Report - ' + x.b + ' ' + x.m + '</title></head><body>');
-            win.document.write(pdfHtml);
-            win.document.write('</body></html>');
+            closeShareModal();
+            var win = window.open('', '', 'width=700,height=700');
+            win.document.write('<html><head><title>Watch Report - ' + w.brand + ' ' + w.model + '</title></head><body>' + pdfHtml + '</body></html>');
             win.document.close();
             win.focus();
-            setTimeout(function(){ win.print(); }, 500);
+            setTimeout(function() { win.print(); }, 500);
+        }
+
+        function exportBackup() {
+            var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(watches));
+            var dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", "watch_vault_backup_" + new Date().toISOString().slice(0, 10) + ".json");
+            document.body.appendChild(dl);
+            dl.click();
+            dl.remove();
+        }
+
+        function importBackup(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    var parsed = JSON.parse(evt.target.result);
+                    if (Array.isArray(parsed)) {
+                        if (confirm("Restore " + parsed.length + " watches into your collection?")) {
+                            watches = parsed;
+                            localStorage.setItem('watches_v2', JSON.stringify(watches));
+                            render();
+                            alert("Backup restored!");
+                        }
+                    }
+                } catch (err) { alert("Invalid backup file format."); }
+            };
+            reader.readAsText(file);
         }
 
         function render() {
-            var el = document.getElementById('list');
-            var filtered = activeCat === 'All' ? W : W.filter(function(x){ return x.c === activeCat; });
-            
-            if(!filtered.length) { 
-                el.innerHTML = '<p style="text-align:center; color:#94a3b8; margin-top:30px;">No watches found in this category.</p>'; 
-                return; 
+            var list = document.getElementById('watchList');
+            var filtered = activeCategoryFilter === 'All' ? watches : watches.filter(function(w) { return w.category === activeCategoryFilter; });
+
+            if (!filtered.length) {
+                list.innerHTML = '<div class="text-center py-12 text-slate-500 text-xs font-medium bg-slate-900 border border-slate-800 rounded-2xl">No watches found in this category.</div>';
+                return;
             }
-            
-            el.innerHTML = filtered.map(function(x){
-                var imgHtml = (x.imgs && x.imgs.length) ? '<img src="'+x.imgs[0]+'" class="card-img">' : '';
-                return '<div class="card">' + imgHtml +
-                    '<div class="card-body">' +
-                        '<div style="display:flex; justify-content:space-between; align-items:center;" onclick="openEditModal('+x.id+')">' +
-                            '<span style="font-size:11px; background:#312e81; color:#c7d2fe; padding:2px 6px; border-radius:8px; font-weight:bold;">'+x.c+'</span>' +
-                            '<b style="font-size:14px; color:#34d399;">$'+(x.v || '0')+'</b>' +
+
+            list.innerHTML = filtered.map(function(w) {
+                var imgCover = (w.images && w.images.length) ? '<img src="' + w.images[0] + '" class="w-full h-44 object-cover cursor-pointer" onclick="editWatch(' + w.id + ')">' : '';
+
+                var custHtml = '';
+                if (w.customFields && Object.keys(w.customFields).length) {
+                    custHtml = '<div class="flex flex-wrap gap-1.5 mt-2.5 py-1">' +
+                        Object.keys(w.customFields).map(function(k) {
+                            return '<span class="bg-slate-950 text-slate-400 text-[10px] px-2 py-0.5 rounded-md border border-slate-800"><b class="text-slate-300">' + k + ':</b> ' + w.customFields[k] + '</span>';
+                        }).join('') +
+                    '</div>';
+                }
+
+                return '<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg transition-all hover:border-slate-700">' +
+                    imgCover +
+                    '<div class="p-4 space-y-2">' +
+                        '<div class="flex justify-between items-center">' +
+                            '<span class="bg-indigo-950/80 text-indigo-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-indigo-800/50">' + w.category + '</span>' +
+                            '<span class="text-emerald-400 font-bold text-sm">' + (w.currentValue ? '$' + Number(w.currentValue).toLocaleString() : '$0') + '</span>' +
                         '</div>' +
-                        '<h3 style="margin:6px 0 2px 0; font-size:16px; cursor:pointer;" onclick="openEditModal('+x.id+')">'+x.b+' '+x.m+'</h3>' +
-                        '<p style="font-size:12px; color:#94a3b8; margin:0 0 10px 0;">'+(x.n || 'No notes')+'</p>' +
-                        '<div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #334155; padding-top:8px;">' +
-                            '<div>' +
-                                '<button onclick="openEditModal('+x.id+')" style="background:#334155; padding:4px 10px; font-size:11px; margin-right:4px;">Edit</button>' +
-                                '<button onclick="openShare('+x.id+')" style="background:#475569; padding:4px 10px; font-size:11px;">Share / PDF</button>' +
+                        '<h3 class="text-base font-bold text-white cursor-pointer hover:text-indigo-400" onclick="editWatch(' + w.id + ')">' + w.brand + ' ' + w.model + '</h3>' +
+                        '<p class="text-xs text-slate-400 leading-relaxed">' + (w.description || 'No description provided.') + '</p>' +
+                        custHtml +
+                        '<div class="flex justify-between items-center pt-3 border-t border-slate-800/80 mt-2">' +
+                            '<div class="flex gap-1.5">' +
+                                '<button onclick="editWatch(' + w.id + ')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">Edit</button>' +
+                                '<button onclick="openShareModal(' + w.id + ')" class="bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-lg border border-indigo-800/50 transition-all">Share / PDF</button>' +
                             '</div>' +
-                            '<button onclick="delW('+x.id+')" style="background:#ef4444; padding:4px 10px; font-size:11px;">Delete</button>' +
+                            '<button onclick="deleteWatch(' + w.id + ')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all">Delete</button>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
             }).join('');
         }
+
         render();
     </script>
 </body>
