@@ -23,14 +23,39 @@
     <div class="max-w-md mx-auto px-4 py-4 space-y-4">
 
         <!-- Top Header & Actions -->
-        <header class="flex items-center justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg gap-2">
-            <h1 class="text-base font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+        <header class="flex items-center justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg">
+            <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
                 Watch Vault
             </h1>
-            
-            <!-- Centered Circular Add Watch Pill -->
-            <div class="flex flex-col items-center">
-                <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-
+            <button onclick="openModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-4 py-2 rounded-full shadow-md active:scale-95 transition-all">
+                + Add Watch
+            </button>
+        </header>
+
+        <!-- Backup & Restore Bar -->
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="exportBackup()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium text-xs py-2 rounded-xl text-center active:scale-95 transition-all">
+                📥 Export Backup
+            </button>
+            <button onclick="document.getElementById('importFile').click()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium text-xs py-2 rounded-xl text-center active:scale-95 transition-all">
+                📤 Import Backup
+            </button>
+            <input type="file" id="importFile" accept=".json" class="hidden" onchange="importBackup(event)">
+        </div>
+
+        <!-- Horizontal Scroll Category Bar -->
+        <div class="flex gap-2 overflow-x-auto no-scrollbar py-1" id="catFilters">
+            <button onclick="setFilter('All', this)" class="filter-btn active bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-indigo-500 shadow-sm transition-all">All</button>
+            <button onclick="setFilter('Diver', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Diver</button>
+            <button onclick="setFilter('Dress', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Dress</button>
+            <button onclick="setFilter('Chronograph', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Chronograph</button>
+            <button onclick="setFilter('Field', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Field</button>
+            <button onclick="setFilter('Vintage', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Vintage</button>
+        </div>
+
+        <!-- Watch Cards Container -->
+        <div id="watchList" class="space-y-4"></div>
+    </div>
     <!-- Add / Edit Watch Modal -->
     <div id="watchModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
@@ -65,7 +90,7 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Estimated Value ($)</label>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Value ($)</label>
                         <input type="number" id="currentValue" placeholder="14500" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
@@ -119,8 +144,8 @@
                         <input type="number" id="purchasePrice" placeholder="10200" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Sale Price ($)</label>
-                        <input type="number" id="salePrice" placeholder="15000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Asking Price ($)</label>
+                        <input type="number" id="askingPrice" placeholder="15000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
                 <div>
@@ -237,7 +262,7 @@
                 caseMaterial: "Stainless Steel",
                 purchaseDate: "2023-01-15",
                 purchasePrice: "10200",
-                salePrice: "15000",
+                askingPrice: "14500",
                 dateOfManufacture: "2022",
                 description: "Black dial, Cerachrom bezel. Daily driver.",
                 images: ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80"]
@@ -298,26 +323,7 @@
         loadVaultData();
     </script>
     <script>
-        // Handle physical/browser back button on mobile to close modals instead of exiting app
-        window.addEventListener('popstate', function(event) {
-            var detailOpen = !document.getElementById('detailModal').classList.contains('hidden');
-            var watchModalOpen = !document.getElementById('watchModal').classList.contains('hidden');
-            var shareModalOpen = !document.getElementById('shareModal').classList.contains('hidden');
-            var lightboxOpen = !document.getElementById('lightboxModal').classList.contains('hidden');
-
-            if (lightboxOpen) {
-                closeLightbox();
-            } else if (shareModalOpen) {
-                closeShareModal();
-            } else if (detailOpen) {
-                closeDetailModal();
-            } else if (watchModalOpen) {
-                closeModal();
-            }
-        });
-
         function openModal() {
-            history.pushState({ modal: 'edit' }, '');
             document.getElementById('modalTitle').innerText = 'Add Watch';
             document.getElementById('watchId').value = '';
             document.getElementById('watchForm').reset();
@@ -331,9 +337,6 @@
         function closeModal() {
             document.getElementById('watchModal').classList.add('hidden');
             document.getElementById('watchModal').classList.remove('flex');
-            if (window.history.state && window.history.state.modal) {
-                history.back();
-            }
         }
 
         function setFilter(category, element) {
@@ -462,7 +465,7 @@
                 caseMaterial: document.getElementById('caseMaterial').value,
                 purchaseDate: document.getElementById('purchaseDate').value,
                 purchasePrice: document.getElementById('purchasePrice').value,
-                salePrice: document.getElementById('salePrice').value,
+                askingPrice: document.getElementById('askingPrice').value,
                 dateOfManufacture: document.getElementById('dateOfManufacture').value,
                 description: document.getElementById('description').value,
                 images: currentTempImages
@@ -482,7 +485,6 @@
     </script>
     <script>
         function openDetailModal(id) {
-            history.pushState({ modal: 'detail' }, '');
             var w = watches.find(function(item) { return item.id === id; });
             if (!w) return;
 
@@ -504,7 +506,7 @@
                 { label: 'Case Material', val: w.caseMaterial },
                 { label: 'Purchase Date', val: w.purchaseDate },
                 { label: 'Purchase Price', val: w.purchasePrice ? '$' + Number(w.purchasePrice).toLocaleString() : null },
-                { label: 'Sale Price', val: w.salePrice ? '$' + Number(w.salePrice).toLocaleString() : null },
+                { label: 'Asking Price', val: w.askingPrice ? '$' + Number(w.askingPrice).toLocaleString() : null },
                 { label: 'Mfg Date', val: w.dateOfManufacture }
             ].filter(function(s) { return s.val; });
 
@@ -539,13 +541,9 @@
         function closeDetailModal() {
             document.getElementById('detailModal').classList.add('hidden');
             document.getElementById('detailModal').classList.remove('flex');
-            if (window.history.state && window.history.state.modal) {
-                history.back();
-            }
         }
 
         function openLightbox(imgSrc) {
-            history.pushState({ modal: 'lightbox' }, '');
             document.getElementById('lightboxImg').src = imgSrc;
             var box = document.getElementById('lightboxModal');
             box.classList.remove('hidden');
@@ -556,13 +554,9 @@
             var box = document.getElementById('lightboxModal');
             box.classList.add('hidden');
             box.classList.remove('flex');
-            if (window.history.state && window.history.state.modal) {
-                history.back();
-            }
         }
 
         function editWatch(id) {
-            history.pushState({ modal: 'edit' }, '');
             var w = watches.find(function(item) { return item.id === id; });
             if (!w) return;
             document.getElementById('modalTitle').innerText = 'Edit Watch';
@@ -582,7 +576,7 @@
             document.getElementById('caseMaterial').value = w.caseMaterial || '';
             document.getElementById('purchaseDate').value = w.purchaseDate || '';
             document.getElementById('purchasePrice').value = w.purchasePrice || '';
-            document.getElementById('salePrice').value = w.salePrice || '';
+            document.getElementById('askingPrice').value = w.askingPrice || '';
             document.getElementById('dateOfManufacture').value = w.dateOfManufacture || '';
             document.getElementById('description').value = w.description || '';
 
@@ -622,7 +616,6 @@
         }
 
         function openShareModal(id) {
-            history.pushState({ modal: 'share' }, '');
             activeShareWatchId = id;
             var w = watches.find(function(item) { return item.id === id; });
             if (!w) return;
@@ -650,9 +643,6 @@
         function closeShareModal() {
             document.getElementById('shareModal').classList.add('hidden');
             document.getElementById('shareModal').classList.remove('flex');
-            if (window.history.state && window.history.state.modal) {
-                history.back();
-            }
         }
 
         function buildShareTextPayload() {
@@ -737,13 +727,6 @@
         }
 
         function render() {
-            // Update total collection value in header from estimated values
-            var totalVal = watches.reduce(function(sum, w) {
-                return sum + (Number(w.currentValue) || 0);
-            }, 0);
-            var headerColEl = document.getElementById('headerCollectionVal');
-            if (headerColEl) headerColEl.innerText = '$' + totalVal.toLocaleString();
-
             var list = document.getElementById('watchList');
             if (!list) return;
 
@@ -768,8 +751,8 @@
                     imgCover +
                     '<div class="p-4 space-y-2 cursor-pointer" onclick="openDetailModal(' + w.id + ')">' +
                         '<div class="flex justify-between items-center">' +
-                            '<span class="text-emerald-400 font-bold text-sm">' + (w.currentValue ? '$' + Number(w.currentValue).toLocaleString() : '$0') + '</span>' +
                             '<span class="bg-indigo-950/80 text-indigo-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-indigo-800/50">' + (w.category || 'General') + '</span>' +
+                            '<span class="text-emerald-400 font-bold text-sm">' + (w.currentValue ? '$' + Number(w.currentValue).toLocaleString() : '$0') + '</span>' +
                         '</div>' +
                         '<h3 class="text-base font-bold text-white hover:text-indigo-400">' + displayTitle + '</h3>' +
                         (w.refNumber ? '<p class="text-xs text-indigo-300/80 font-mono">Ref: ' + w.refNumber + '</p>' : '') +
