@@ -211,6 +211,11 @@
         </div>
     </div>
     <script>
+        var watches = [];
+        var currentTempImages = [];
+        var activeCategoryFilter = 'All';
+        var activeShareWatchId = null;
+
         var defaultWatches = [
             {
                 id: 101,
@@ -235,27 +240,58 @@
             }
         ];
 
-        var stored = localStorage.getItem('watches_v18');
-        var watches = [];
-        try {
-            watches = stored ? JSON.parse(stored) : defaultWatches;
-            if (!Array.isArray(watches)) watches = defaultWatches;
-        } catch(e) {
-            watches = defaultWatches;
+        function openIDB() {
+            return new Promise(function(resolve, reject) {
+                var request = indexedDB.open('WatchVaultMassiveDB', 1);
+                request.onupgradeneeded = function(e) {
+                    var db = e.target.result;
+                    if (!db.objectStoreNames.contains('vault')) {
+                        db.createObjectStore('vault');
+                    }
+                };
+                request.onsuccess = function(e) { resolve(e.target.result); };
+                request.onerror = function(e) { reject(e.target.error); };
+            });
         }
-        localStorage.setItem('watches_v18', JSON.stringify(watches));
 
-        var currentTempImages = [];
-        var activeCategoryFilter = 'All';
-        var activeShareWatchId = null;
-
-        function persistWatches() {
+        async function loadVaultData() {
             try {
-                localStorage.setItem('watches_v18', JSON.stringify(watches));
+                var db = await openIDB();
+                var tx = db.transaction('vault', 'readonly');
+                var store = tx.objectStore('vault');
+                var req = store.get('watch_collection');
+                req.onsuccess = function() {
+                    var data = req.result;
+                    if (data && Array.isArray(data) && data.length > 0) {
+                        watches = data;
+                    } else {
+                        watches = defaultWatches;
+                        saveVaultData();
+                    }
+                    render();
+                };
+                req.onerror = function() {
+                    watches = defaultWatches;
+                    render();
+                };
             } catch(err) {
-                alert("Storage limit reached! Use 'Export Backup' to save your collection file.");
+                watches = defaultWatches;
+                render();
             }
         }
+
+        async function saveVaultData() {
+            try {
+                var db = await openIDB();
+                var tx = db.transaction('vault', 'readwrite');
+                var store = tx.objectStore('vault');
+                store.put(watches, 'watch_collection');
+            } catch(err) {
+                console.error("IndexedDB save error:", err);
+            }
+        }
+
+        loadVaultData();
     </script>
     <script>
         function openModal() {
@@ -394,7 +430,7 @@
                 watches.push(watchData);
             }
 
-            persistWatches();
+            await saveVaultData();
             closeModal();
             render();
         }
@@ -499,10 +535,10 @@
             document.getElementById('watchModal').classList.add('flex');
         }
 
-        function deleteWatch(id) {
+        async function deleteWatch(id) {
             if (confirm("Delete this watch record?")) {
                 watches = watches.filter(function(w) { return w.id !== id; });
-                persistWatches();
+                await saveVaultData();
                 render();
             }
         }
@@ -596,13 +632,13 @@
             var file = e.target.files[0];
             if (!file) return;
             var reader = new FileReader();
-            reader.onload = function(evt) {
+            reader.onload = async function(evt) {
                 try {
                     var parsed = JSON.parse(evt.target.result);
                     if (Array.isArray(parsed)) {
                         if (confirm("Import " + parsed.length + " watches into your collection?")) {
                             watches = parsed;
-                            persistWatches();
+                            await saveVaultData();
                             render();
                             alert("Collection imported!");
                         }
@@ -646,8 +682,6 @@
                 '</div>';
             }).join('');
         }
-
-        render();
     </script>
 </body>
 </html>
