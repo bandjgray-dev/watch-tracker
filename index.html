@@ -157,7 +157,7 @@
                     <textarea id="description" rows="2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"></textarea>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Images</label>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Images (First image is cover)</label>
                     <input type="file" id="imgs" accept="image/*" multiple onchange="handleImgs(event)" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500">
                     <div id="imagePreviewContainer" class="flex gap-2 overflow-x-auto py-2"></div>
                 </div>
@@ -399,11 +399,28 @@
             var container = document.getElementById('imagePreviewContainer');
             if(!container) return;
             container.innerHTML = currentTempImages.map(function(imgSrc, index) {
-                return '<div class="relative w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden border border-slate-700">' +
-                    '<img src="' + imgSrc + '" class="w-full h-full object-cover">' +
-                    '<button type="button" onclick="removeTempImage(' + index + ')" class="absolute top-0 right-0 bg-red-600 text-white w-4 h-4 rounded-bl flex items-center justify-center text-[10px] font-bold">&times;</button>' +
+                var leftBtn = index > 0 ? '<button type="button" onclick="moveTempImage(' + index + ', -1)" class="bg-slate-800/80 hover:bg-slate-700 text-white w-4 h-4 rounded flex items-center justify-center text-[10px] font-bold">‹</button>' : '';
+                var rightBtn = index < currentTempImages.length - 1 ? '<button type="button" onclick="moveTempImage(' + index + ', 1)" class="bg-slate-800/80 hover:bg-slate-700 text-white w-4 h-4 rounded flex items-center justify-center text-[10px] font-bold">›</button>' : '';
+
+                return '<div class="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 flex flex-col items-center justify-between p-1">' +
+                    '<img src="' + imgSrc + '" class="absolute inset-0 w-full h-full object-cover opacity-80">' +
+                    '<div class="relative z-10 w-full flex justify-end">' +
+                        '<button type="button" onclick="removeTempImage(' + index + ')" class="bg-red-600 hover:bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shadow">&times;</button>' +
+                    '</div>' +
+                    '<div class="relative z-10 w-full flex justify-between px-1 pb-0.5">' +
+                        leftBtn +
+                        rightBtn +
+                    '</div>' +
                 '</div>';
             }).join('');
+        }
+
+        function moveTempImage(index, direction) {
+            var targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= currentTempImages.length) return;
+            var item = currentTempImages.splice(index, 1)[0];
+            currentTempImages.splice(targetIndex, 0, item);
+            renderTempImagePreviews();
         }
 
         function removeTempImage(index) {
