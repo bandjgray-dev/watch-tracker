@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Watch Vault</title>
+    
+    <!-- PWA Manifest & Mobile Icons -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#020617">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Watch Vault">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2972/2972531.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -219,6 +228,17 @@
         </div>
     </div>
     <script>
+        // Register Service Worker for Mobile PWA Installation
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('./sw.js').then(function(reg) {
+                    console.log('PWA Service Worker active:', reg.scope);
+                }).catch(function(err) {
+                    console.error('Service Worker registration failed:', err);
+                });
+            });
+        }
+
         var watches = [];
         var currentTempImages = [];
         var activeCategoryFilter = 'All';
@@ -546,7 +566,7 @@
             currentTempImages = w.images ? [...w.images] : [];
             renderTempImagePreviews();
             
-            // Show delete button inside the edit modal
+            // Show delete button inside edit modal
             document.getElementById('modalDeleteBtn').classList.remove('hidden');
 
             document.getElementById('watchModal').classList.remove('hidden');
