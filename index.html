@@ -327,7 +327,26 @@
         loadVaultData();
     </script>
     <script>
+        // Handle physical/browser back button on mobile to close modals instead of exiting app
+        window.addEventListener('popstate', function(event) {
+            var detailOpen = !document.getElementById('detailModal').classList.contains('hidden');
+            var watchModalOpen = !document.getElementById('watchModal').classList.contains('hidden');
+            var shareModalOpen = !document.getElementById('shareModal').classList.contains('hidden');
+            var lightboxOpen = !document.getElementById('lightboxModal').classList.contains('hidden');
+
+            if (lightboxOpen) {
+                closeLightbox();
+            } else if (shareModalOpen) {
+                closeShareModal();
+            } else if (detailOpen) {
+                closeDetailModal();
+            } else if (watchModalOpen) {
+                closeModal();
+            }
+        });
+
         function openModal() {
+            history.pushState({ modal: 'edit' }, '');
             document.getElementById('modalTitle').innerText = 'Add Watch';
             document.getElementById('watchId').value = '';
             document.getElementById('watchForm').reset();
@@ -341,6 +360,9 @@
         function closeModal() {
             document.getElementById('watchModal').classList.add('hidden');
             document.getElementById('watchModal').classList.remove('flex');
+            if (window.history.state && window.history.state.modal) {
+                history.back();
+            }
         }
 
         function setFilter(category, element) {
@@ -489,6 +511,7 @@
     </script>
     <script>
         function openDetailModal(id) {
+            history.pushState({ modal: 'detail' }, '');
             var w = watches.find(function(item) { return item.id === id; });
             if (!w) return;
 
@@ -545,9 +568,13 @@
         function closeDetailModal() {
             document.getElementById('detailModal').classList.add('hidden');
             document.getElementById('detailModal').classList.remove('flex');
+            if (window.history.state && window.history.state.modal) {
+                history.back();
+            }
         }
 
         function openLightbox(imgSrc) {
+            history.pushState({ modal: 'lightbox' }, '');
             document.getElementById('lightboxImg').src = imgSrc;
             var box = document.getElementById('lightboxModal');
             box.classList.remove('hidden');
@@ -558,9 +585,13 @@
             var box = document.getElementById('lightboxModal');
             box.classList.add('hidden');
             box.classList.remove('flex');
+            if (window.history.state && window.history.state.modal) {
+                history.back();
+            }
         }
 
         function editWatch(id) {
+            history.pushState({ modal: 'edit' }, '');
             var w = watches.find(function(item) { return item.id === id; });
             if (!w) return;
             document.getElementById('modalTitle').innerText = 'Edit Watch';
@@ -620,6 +651,7 @@
         }
 
         function openShareModal(id) {
+            history.pushState({ modal: 'share' }, '');
             activeShareWatchId = id;
             var w = watches.find(function(item) { return item.id === id; });
             if (!w) return;
@@ -647,6 +679,9 @@
         function closeShareModal() {
             document.getElementById('shareModal').classList.add('hidden');
             document.getElementById('shareModal').classList.remove('flex');
+            if (window.history.state && window.history.state.modal) {
+                history.back();
+            }
         }
 
         function buildShareTextPayload() {
