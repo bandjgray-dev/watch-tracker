@@ -45,8 +45,7 @@
         </div>
 
         <!-- Watch Cards Container -->
-        <div id="watchList" class="space-y-4"></div>
-    </div>
+        <div id="watchList" class="space-y-
     <!-- Add / Edit Watch Modal -->
     <div id="watchModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
@@ -553,6 +552,20 @@
             }
         }
 
+        async function moveWatch(id, direction) {
+            var index = watches.findIndex(function(w) { return w.id === id; });
+            if (index === -1) return;
+            
+            var targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= watches.length) return;
+
+            var item = watches.splice(index, 1)[0];
+            watches.splice(targetIndex, 0, item);
+
+            await saveVaultData();
+            render();
+        }
+
         function openShareModal(id) {
             activeShareWatchId = id;
             var w = watches.find(function(item) { return item.id === id; });
@@ -675,9 +688,15 @@
                 return;
             }
 
-            list.innerHTML = filtered.map(function(w) {
+            list.innerHTML = filtered.map(function(w, idx) {
                 var imgCover = (w.images && w.images.length) ? '<img src="' + w.images[0] + '" class="w-full h-44 object-cover cursor-pointer" onclick="openDetailModal(' + w.id + ')">' : '';
                 var displayTitle = (w.brand || '') + (w.model ? ' ' + w.model : '');
+
+                var moveButtons = activeCategoryFilter === 'All' ? 
+                    '<div class="flex gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">' +
+                        '<button onclick="moveWatch(' + w.id + ', -1)" ' + (idx === 0 ? 'disabled class="text-slate-700 px-1.5 text-xs cursor-not-allowed"' : 'class="text-slate-300 hover:text-white px-1.5 text-xs"') + '>↑</button>' +
+                        '<button onclick="moveWatch(' + w.id + ', 1)" ' + (idx === filtered.length - 1 ? 'disabled class="text-slate-700 px-1.5 text-xs cursor-not-allowed"' : 'class="text-slate-300 hover:text-white px-1.5 text-xs"') + '>↓</button>' +
+                    '</div>' : '';
 
                 return '<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg transition-all hover:border-slate-700">' +
                     imgCover +
@@ -691,11 +710,14 @@
                         '<p class="text-xs text-slate-400 leading-relaxed line-clamp-2">' + (w.description || 'No description provided.') + '</p>' +
                     '</div>' +
                     '<div class="flex justify-between items-center px-4 pb-4 pt-2 border-t border-slate-800/80">' +
-                        '<div class="flex gap-1.5">' +
+                        '<div class="flex gap-1.5 items-center">' +
                             '<button onclick="editWatch(' + w.id + ')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">Edit</button>' +
                             '<button onclick="openShareModal(' + w.id + ')" class="bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-lg border border-indigo-800/50 transition-all">Share / PDF</button>' +
                         '</div>' +
-                        '<button onclick="deleteWatch(' + w.id + ')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all">Delete</button>' +
+                        '<div class="flex gap-2 items-center">' +
+                            moveButtons +
+                            '<button onclick="deleteWatch(' + w.id + ')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all">Delete</button>' +
+                        '</div>' +
                     '</div>' +
                 '</div>';
             }).join('');
