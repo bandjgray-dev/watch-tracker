@@ -59,11 +59,15 @@
                         <input type="text" id="brand" required placeholder="Rolex" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Model</label>
-                        <input type="text" id="model" required placeholder="Submariner" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Model (Optional)</label>
+                        <input type="text" id="model" placeholder="Submariner" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Reference Number</label>
+                        <input type="text" id="refNumber" placeholder="126610LN" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
+                    </div>
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Category</label>
                         <select id="category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
@@ -74,70 +78,70 @@
                             <option value="Vintage">Vintage</option>
                         </select>
                     </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Value ($)</label>
                         <input type="number" id="currentValue" placeholder="14500" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Movement</label>
                         <input type="text" id="movementType" placeholder="Automatic 3235" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Serial Number</label>
                         <input type="text" id="serialNumber" placeholder="X829F114" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Case Size</label>
                         <input type="text" id="caseSize" placeholder="41mm" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Lug Width</label>
                         <input type="text" id="lugWidth" placeholder="20mm" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Crystal Type</label>
                         <input type="text" id="crystalType" placeholder="Sapphire" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Band Material</label>
                         <input type="text" id="bandMaterial" placeholder="Steel Oyster" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Water Resistance</label>
                         <input type="text" id="waterResistance" placeholder="300m" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Case Material</label>
                         <input type="text" id="caseMaterial" placeholder="Stainless Steel" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Purchase Date</label>
                         <input type="date" id="purchaseDate" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Purchase Price ($)</label>
                         <input type="number" id="purchasePrice" placeholder="10200" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Asking Price ($)</label>
                         <input type="number" id="askingPrice" placeholder="15000" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Mfg Date / Year</label>
-                        <input type="text" id="dateOfManufacture" placeholder="2022" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
-                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Mfg Date / Year</label>
+                    <input type="text" id="dateOfManufacture" placeholder="2022" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Notes</label>
@@ -174,7 +178,8 @@
             <div class="grid grid-cols-2 gap-2 bg-slate-950 p-3 rounded-2xl border border-slate-800/80 text-xs">
                 <div><span class="text-slate-500 block uppercase text-[9px] font-bold">Estimated Value</span><span id="detVal" class="text-emerald-400 font-bold text-sm"></span></div>
                 <div><span class="text-slate-500 block uppercase text-[9px] font-bold">Movement</span><span id="detMovement" class="text-slate-200 font-medium"></span></div>
-                <div class="col-span-2 pt-1 border-t border-slate-900"><span class="text-slate-500 block uppercase text-[9px] font-bold">Serial Number</span><span id="detSerial" class="text-slate-300 font-mono"></span></div>
+                <div><span class="text-slate-500 block uppercase text-[9px] font-bold">Reference No.</span><span id="detRefNumber" class="text-slate-300 font-mono"></span></div>
+                <div><span class="text-slate-500 block uppercase text-[9px] font-bold">Serial Number</span><span id="detSerial" class="text-slate-300 font-mono"></span></div>
             </div>
 
             <div id="detSpecsSection"></div>
@@ -221,6 +226,7 @@
                 id: 101,
                 brand: "Rolex",
                 model: "Submariner Date",
+                refNumber: "126610LN",
                 category: "Diver",
                 currentValue: "14500",
                 movementType: "Automatic (3235)",
@@ -405,6 +411,7 @@
                 id: id ? Number(id) : Date.now(),
                 brand: document.getElementById('brand').value,
                 model: document.getElementById('model').value,
+                refNumber: document.getElementById('refNumber').value,
                 category: document.getElementById('category').value,
                 currentValue: document.getElementById('currentValue').value,
                 movementType: document.getElementById('movementType').value,
@@ -440,9 +447,11 @@
             var w = watches.find(function(item) { return item.id === id; });
             if (!w) return;
 
-            document.getElementById('detTitle').innerText = (w.brand || '') + ' ' + (w.model || '');
+            var titleStr = (w.brand || '') + (w.model ? ' ' + w.model : '');
+            document.getElementById('detTitle').innerText = titleStr;
             document.getElementById('detVal').innerText = w.currentValue ? '$' + Number(w.currentValue).toLocaleString() : '$0';
             document.getElementById('detMovement').innerText = w.movementType || 'N/A';
+            document.getElementById('detRefNumber').innerText = w.refNumber || 'N/A';
             document.getElementById('detSerial').innerText = w.serialNumber || 'N/A';
             document.getElementById('detDesc').innerText = w.description || 'No notes provided.';
 
@@ -513,6 +522,7 @@
             document.getElementById('watchId').value = w.id;
             document.getElementById('brand').value = w.brand || '';
             document.getElementById('model').value = w.model || '';
+            document.getElementById('refNumber').value = w.refNumber || '';
             document.getElementById('category').value = w.category || 'Diver';
             document.getElementById('currentValue').value = w.currentValue || '';
             document.getElementById('movementType').value = w.movementType || '';
@@ -550,7 +560,8 @@
             var box = document.getElementById('shareOptionsBox');
             var html = '';
             var items = [
-                { id: 'sb_brand', label: 'Watch Name', val: (w.brand || '') + ' ' + (w.model || ''), def: true },
+                { id: 'sb_brand', label: 'Watch Name', val: (w.brand || '') + (w.model ? ' ' + w.model : ''), def: true },
+                { id: 'sb_ref', label: 'Ref No.', val: w.refNumber, def: true },
                 { id: 'sb_cat', label: 'Category', val: w.category, def: true },
                 { id: 'sb_val', label: 'Estimated Value', val: '$' + (w.currentValue || 'N/A'), def: true },
                 { id: 'sb_mov', label: 'Movement', val: w.movementType, def: true },
@@ -576,7 +587,8 @@
             var w = watches.find(function(item) { return item.id === activeShareWatchId; });
             if (!w) return '';
             var txt = "⌚ Watch Details Report\n";
-            if (document.getElementById('sb_brand') && document.getElementById('sb_brand').checked) txt += "Watch: " + (w.brand || '') + " " + (w.model || '') + "\n";
+            if (document.getElementById('sb_brand') && document.getElementById('sb_brand').checked) txt += "Watch: " + (w.brand || '') + (w.model ? ' ' + w.model : '') + "\n";
+            if (document.getElementById('sb_ref') && document.getElementById('sb_ref').checked) txt += "Ref No.: " + (w.refNumber || 'N/A') + "\n";
             if (document.getElementById('sb_cat') && document.getElementById('sb_cat').checked) txt += "Category: " + (w.category || '') + "\n";
             if (document.getElementById('sb_val') && document.getElementById('sb_val').checked) txt += "Est. Value: $" + (w.currentValue || 'N/A') + "\n";
             if (document.getElementById('sb_mov') && document.getElementById('sb_mov').checked) txt += "Movement: " + (w.movementType || 'N/A') + "\n";
@@ -589,7 +601,8 @@
             var w = watches.find(function(item) { return item.id === activeShareWatchId; });
             var txt = buildShareTextPayload();
             closeShareModal();
-            if (navigator.share) navigator.share({ title: (w.brand || '') + " " + (w.model || ''), text: txt });
+            var titleStr = (w.brand || '') + (w.model ? ' ' + w.model : '');
+            if (navigator.share) navigator.share({ title: titleStr, text: txt });
             else prompt("Copy report to share:", txt);
         }
 
@@ -597,15 +610,18 @@
             var w = watches.find(function(item) { return item.id === activeShareWatchId; });
             var txt = buildShareTextPayload();
             closeShareModal();
-            window.location.href = "mailto:?subject=" + encodeURIComponent("Watch Specification: " + (w.brand || '') + " " + (w.model || '')) + "&body=" + encodeURIComponent(txt);
+            var titleStr = (w.brand || '') + (w.model ? ' ' + w.model : '');
+            window.location.href = "mailto:?subject=" + encodeURIComponent("Watch Specification: " + titleStr) + "&body=" + encodeURIComponent(txt);
         }
 
         function executeGeneratePDF() {
             var w = watches.find(function(item) { return item.id === activeShareWatchId; });
             if (!w) return;
+            var titleStr = (w.brand || '') + (w.model ? ' ' + w.model : '');
             var pdfHtml = '<div style="font-family:sans-serif; padding:20px; max-width:600px; margin:auto;">' +
                 '<h1 style="border-bottom:2px solid #cbd5e1; padding-bottom:8px; color:#0f172a;">Watch Vault Record Report</h1>' +
-                '<h2 style="color:#475569; margin-top:16px;">' + (w.brand || '') + ' ' + (w.model || '') + '</h2>' +
+                '<h2 style="color:#475569; margin-top:16px;">' + titleStr + '</h2>' +
+                '<p><strong>Reference No.:</strong> ' + (w.refNumber || 'N/A') + '</p>' +
                 '<p><strong>Category:</strong> ' + (w.category || 'N/A') + '</p>' +
                 '<p><strong>Estimated Value:</strong> $' + (w.currentValue || 'N/A') + '</p>' +
                 '<p><strong>Movement:</strong> ' + (w.movementType || 'N/A') + '</p>' +
@@ -661,6 +677,7 @@
 
             list.innerHTML = filtered.map(function(w) {
                 var imgCover = (w.images && w.images.length) ? '<img src="' + w.images[0] + '" class="w-full h-44 object-cover cursor-pointer" onclick="openDetailModal(' + w.id + ')">' : '';
+                var displayTitle = (w.brand || '') + (w.model ? ' ' + w.model : '');
 
                 return '<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg transition-all hover:border-slate-700">' +
                     imgCover +
@@ -669,7 +686,8 @@
                             '<span class="bg-indigo-950/80 text-indigo-300 text-[10px] font-bold px-2.5 py-1 rounded-full border border-indigo-800/50">' + (w.category || 'General') + '</span>' +
                             '<span class="text-emerald-400 font-bold text-sm">' + (w.currentValue ? '$' + Number(w.currentValue).toLocaleString() : '$0') + '</span>' +
                         '</div>' +
-                        '<h3 class="text-base font-bold text-white hover:text-indigo-400">' + (w.brand || '') + ' ' + (w.model || '') + '</h3>' +
+                        '<h3 class="text-base font-bold text-white hover:text-indigo-400">' + displayTitle + '</h3>' +
+                        (w.refNumber ? '<p class="text-xs text-indigo-300/80 font-mono">Ref: ' + w.refNumber + '</p>' : '') +
                         '<p class="text-xs text-slate-400 leading-relaxed line-clamp-2">' + (w.description || 'No description provided.') + '</p>' +
                     '</div>' +
                     '<div class="flex justify-between items-center px-4 pb-4 pt-2 border-t border-slate-800/80">' +
