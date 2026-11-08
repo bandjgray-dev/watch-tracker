@@ -33,10 +33,10 @@
             </div>
             <div class="grid grid-cols-2 gap-2">
                 <button onclick="exportBackup()" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium text-xs py-1.5 rounded-xl text-center transition-all">
-                    📥 Export JSON
+                    📥 Export Backup
                 </button>
                 <button onclick="document.getElementById('importFile').click()" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium text-xs py-1.5 rounded-xl text-center transition-all">
-                    📤 Import JSON
+                    📤 Import Backup
                 </button>
                 <input type="file" id="importFile" accept=".json" class="hidden" onchange="importBackup(event)">
             </div>
@@ -225,7 +225,6 @@
         var activeCategoryFilter = 'All';
         var activeShareWatchId = null;
 
-        // IndexedDB Helper to remember file handle across reloads
         function getDB() {
             return new Promise(function(resolve, reject) {
                 var request = indexedDB.open('WatchVaultDB', 1);
@@ -264,7 +263,6 @@
                     }
                 }
             } catch(e) {}
-            // Fallback to localStorage if no file is connected yet
             var stored = localStorage.getItem('watches_v16');
             if (stored) {
                 try { watches = JSON.parse(stored); } catch(e) {}
@@ -316,7 +314,6 @@
                     }
                 } catch(e) { console.error("File write error:", e); }
             }
-            // Fallback to localStorage if file isn't linked
             try {
                 localStorage.setItem('watches_v16', JSON.stringify(watches));
             } catch(err) {
