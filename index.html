@@ -23,23 +23,15 @@
             </button>
         </header>
 
-        <!-- Direct File Storage Bar -->
-        <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl shadow-md space-y-2">
-            <div class="flex items-center justify-between">
-                <span id="fileStatus" class="text-xs text-slate-400 font-medium truncate max-w-[200px]">Storage: Disconnected</span>
-                <button onclick="connectLocalFile()" class="bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/40 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all active:scale-95">
-                    📁 Connect File
-                </button>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-                <button onclick="exportBackup()" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium text-xs py-1.5 rounded-xl text-center transition-all">
-                    📥 Export Backup
-                </button>
-                <button onclick="document.getElementById('importFile').click()" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium text-xs py-1.5 rounded-xl text-center transition-all">
-                    📤 Import Backup
-                </button>
-                <input type="file" id="importFile" accept=".json" class="hidden" onchange="importBackup(event)">
-            </div>
+        <!-- Backup & Restore Bar -->
+        <div class="grid grid-cols-2 gap-2">
+            <button onclick="exportBackup()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium text-xs py-2 rounded-xl text-center active:scale-95 transition-all">
+                📥 Export Backup
+            </button>
+            <button onclick="document.getElementById('importFile').click()" class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-medium text-xs py-2 rounded-xl text-center active:scale-95 transition-all">
+                📤 Import Backup
+            </button>
+            <input type="file" id="importFile" accept=".json" class="hidden" onchange="importBackup(event)">
         </div>
 
         <!-- Horizontal Scroll Category Bar -->
@@ -219,117 +211,49 @@
         </div>
     </div>
     <script>
-        var fileHandle = null;
+        var defaultWatches = [
+            {
+                id: 101,
+                brand: "Rolex",
+                model: "Submariner Date",
+                category: "Diver",
+                currentValue: "14500",
+                movementType: "Automatic (3235)",
+                serialNumber: "X829F114",
+                caseSize: "41mm",
+                lugWidth: "20mm",
+                crystalType: "Sapphire",
+                bandMaterial: "Steel Oyster",
+                waterResistance: "300m",
+                caseMaterial: "Stainless Steel",
+                purchaseDate: "2023-01-15",
+                purchasePrice: "10200",
+                askingPrice: "14500",
+                dateOfManufacture: "2022",
+                description: "Black dial, Cerachrom bezel. Daily driver.",
+                images: ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80"]
+            }
+        ];
+
+        var stored = localStorage.getItem('watches_v18');
         var watches = [];
+        try {
+            watches = stored ? JSON.parse(stored) : defaultWatches;
+            if (!Array.isArray(watches)) watches = defaultWatches;
+        } catch(e) {
+            watches = defaultWatches;
+        }
+        localStorage.setItem('watches_v18', JSON.stringify(watches));
+
         var currentTempImages = [];
         var activeCategoryFilter = 'All';
         var activeShareWatchId = null;
 
-        function getDB() {
-            return new Promise(function(resolve, reject) {
-                var request = indexedDB.open('WatchVaultDB', 1);
-                request.onupgradeneeded = function() { request.result.createObjectStore('handles'); };
-                request.onsuccess = function() { resolve(request.result); };
-                request.onerror = function() { reject(request.error); };
-            });
-        }
-
-        async function storeHandle(handle) {
-            var db = await getDB();
-            var tx = db.transaction('handles', 'readwrite');
-            tx.objectStore('handles').put(handle, 'activeFileHandle');
-        }
-
-        async function getStoredHandle() {
-            var db = await getDB();
-            return new Promise(function(resolve) {
-                var tx = db.transaction('handles', 'readonly');
-                var req = tx.objectStore('handles').get('activeFileHandle');
-                req.onsuccess = function() { resolve(req.result); };
-                req.onerror = function() { resolve(null); };
-            });
-        }
-
-        async function initStorage() {
+        function persistWatches() {
             try {
-                var savedHandle = await getStoredHandle();
-                if (savedHandle) {
-                    var perm = await savedHandle.queryPermission({ mode: 'readwrite' });
-                    if (perm === 'granted') {
-                        fileHandle = savedHandle;
-                        await readDataFromFile();
-                        updateFileStatus();
-                        return;
-                    }
-                }
-            } catch(e) {}
-            var stored = localStorage.getItem('watches_v16');
-            if (stored) {
-                try { watches = JSON.parse(stored); } catch(e) {}
-            }
-            render();
-        }
-
-        async function connectLocalFile() {
-            if (!window.showOpenFilePicker) {
-                alert("File System Access is supported in Chrome, Edge, and modern browsers.");
-                return;
-            }
-            try {
-                var handles = await window.showOpenFilePicker({
-                    types: [{ description: 'JSON Files', accept: { 'application/json': ['.json'] } }],
-                    multiple: false
-                });
-                fileHandle = handles[0];
-                await storeHandle(fileHandle);
-                await readDataFromFile();
-                updateFileStatus();
-            } catch (err) {
-                if (err.name !== 'AbortError') alert("Error opening file: " + err.message);
-            }
-        }
-
-        async function readDataFromFile() {
-            if (!fileHandle) return;
-            var file = await fileHandle.getFile();
-            var text = await file.text();
-            if (text.trim()) {
-                try {
-                    watches = JSON.parse(text);
-                    render();
-                } catch(e) { alert("File contains invalid JSON."); }
-            }
-        }
-
-        async function persistWatches() {
-            if (fileHandle) {
-                try {
-                    var perm = await fileHandle.requestPermission({ mode: 'readwrite' });
-                    if (perm === 'granted') {
-                        var writable = await fileHandle.createWritable();
-                        await writable.write(JSON.stringify(watches, null, 2));
-                        await writable.close();
-                        updateFileStatus();
-                        return;
-                    }
-                } catch(e) { console.error("File write error:", e); }
-            }
-            try {
-                localStorage.setItem('watches_v16', JSON.stringify(watches));
+                localStorage.setItem('watches_v18', JSON.stringify(watches));
             } catch(err) {
-                alert("LocalStorage full! Click '📁 Connect File' at top to save unlimited data directly to your hard drive.");
-            }
-        }
-
-        function updateFileStatus() {
-            var el = document.getElementById('fileStatus');
-            if (!el) return;
-            if (fileHandle) {
-                el.innerText = "Linked: " + fileHandle.name;
-                el.className = "text-xs text-emerald-400 font-semibold truncate max-w-[200px]";
-            } else {
-                el.innerText = "Storage: Browser Memory";
-                el.className = "text-xs text-slate-400 font-medium truncate max-w-[200px]";
+                alert("Storage limit reached! Use 'Export Backup' to save your collection file.");
             }
         }
     </script>
@@ -470,7 +394,7 @@
                 watches.push(watchData);
             }
 
-            await persistWatches();
+            persistWatches();
             closeModal();
             render();
         }
@@ -575,10 +499,10 @@
             document.getElementById('watchModal').classList.add('flex');
         }
 
-        async function deleteWatch(id) {
+        function deleteWatch(id) {
             if (confirm("Delete this watch record?")) {
                 watches = watches.filter(function(w) { return w.id !== id; });
-                await persistWatches();
+                persistWatches();
                 render();
             }
         }
@@ -672,13 +596,13 @@
             var file = e.target.files[0];
             if (!file) return;
             var reader = new FileReader();
-            reader.onload = async function(evt) {
+            reader.onload = function(evt) {
                 try {
                     var parsed = JSON.parse(evt.target.result);
                     if (Array.isArray(parsed)) {
                         if (confirm("Import " + parsed.length + " watches into your collection?")) {
                             watches = parsed;
-                            await persistWatches();
+                            persistWatches();
                             render();
                             alert("Collection imported!");
                         }
@@ -723,7 +647,7 @@
             }).join('');
         }
 
-        initStorage();
+        render();
     </script>
 </body>
 </html>
