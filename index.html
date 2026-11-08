@@ -152,9 +152,12 @@
                     <input type="file" id="imgs" accept="image/*" multiple onchange="handleImgs(event)" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500">
                     <div id="imagePreviewContainer" class="flex gap-2 overflow-x-auto py-2"></div>
                 </div>
-                <div class="flex justify-end gap-2 pt-3">
-                    <button type="button" onclick="closeModal()" class="bg-slate-800 text-slate-300 font-semibold text-xs px-4 py-2.5 rounded-xl">Cancel</button>
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-md">Save Watch</button>
+                <div class="flex justify-between items-center pt-3 border-t border-slate-800 mt-2">
+                    <button type="button" id="modalDeleteBtn" onclick="deleteCurrentEditingWatch()" class="hidden bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold text-xs px-3 py-2.5 rounded-xl transition-all">Delete Watch</button>
+                    <div class="flex justify-end gap-2 ml-auto">
+                        <button type="button" onclick="closeModal()" class="bg-slate-800 text-slate-300 font-semibold text-xs px-4 py-2.5 rounded-xl">Cancel</button>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-md">Save Watch</button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -306,6 +309,7 @@
             document.getElementById('watchForm').reset();
             currentTempImages = [];
             renderTempImagePreviews();
+            document.getElementById('modalDeleteBtn').classList.add('hidden');
             document.getElementById('watchModal').classList.remove('hidden');
             document.getElementById('watchModal').classList.add('flex');
         }
@@ -541,14 +545,21 @@
 
             currentTempImages = w.images ? [...w.images] : [];
             renderTempImagePreviews();
+            
+            // Show delete button inside the edit modal
+            document.getElementById('modalDeleteBtn').classList.remove('hidden');
+
             document.getElementById('watchModal').classList.remove('hidden');
             document.getElementById('watchModal').classList.add('flex');
         }
 
-        async function deleteWatch(id) {
+        async function deleteCurrentEditingWatch() {
+            var id = document.getElementById('watchId').value;
+            if (!id) return;
             if (confirm("Delete this watch record?")) {
-                watches = watches.filter(function(w) { return w.id !== id; });
+                watches = watches.filter(function(w) { return w.id !== Number(id); });
                 await saveVaultData();
+                closeModal();
                 render();
             }
         }
@@ -715,10 +726,7 @@
                             '<button onclick="editWatch(' + w.id + ')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">Edit</button>' +
                             '<button onclick="openShareModal(' + w.id + ')" class="bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-lg border border-indigo-800/50 transition-all">Share / PDF</button>' +
                         '</div>' +
-                        '<div class="flex gap-2 items-center">' +
-                            moveButtons +
-                            '<button onclick="deleteWatch(' + w.id + ')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all">Delete</button>' +
-                        '</div>' +
+                        '<div>' + moveButtons + '</div>' +
                     '</div>' +
                 '</div>';
             }).join('');
