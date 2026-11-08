@@ -44,7 +44,17 @@
 
         <!-- Horizontal Scroll Category Bar -->
         <div class="flex gap-2 overflow-x-auto no-scrollbar py-1" id="catFilters">
-            <button onclick="setFilter('All', this
+            <button onclick="setFilter('All', this)" class="filter-btn active bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-indigo-500 shadow-sm transition-all">All</button>
+            <button onclick="setFilter('Diver', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Diver</button>
+            <button onclick="setFilter('Dress', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Dress</button>
+            <button onclick="setFilter('Chronograph', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Chronograph</button>
+            <button onclick="setFilter('Field', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Field</button>
+            <button onclick="setFilter('Vintage', this)" class="filter-btn bg-slate-900 text-slate-400 hover:text-slate-200 text-xs font-semibold px-4 py-2 rounded-full whitespace-nowrap border border-slate-800 shadow-sm transition-all">Vintage</button>
+        </div>
+
+        <!-- Watch Cards Container -->
+        <div id="watchList" class="space-y-4"></div>
+    </div>
     <!-- Add / Edit Watch Modal -->
     <div id="watchModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
