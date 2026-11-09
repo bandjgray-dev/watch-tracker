@@ -187,12 +187,22 @@
     <!-- Expanded Detail Modal -->
     <div id="detailModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-50 items-center justify-center p-4 overflow-y-auto">
         <div class="bg-slate-900 border border-slate-800 text-slate-100 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-4">
-            <div class="flex justify-end items-center">
+            <div class="flex justify-between items-center">
+                <span id="detImageCounter" class="text-xs font-mono text-slate-400 bg-slate-950 px-2.5 py-1 rounded-full border border-slate-800">1/1</span>
                 <button onclick="closeDetailModal()" class="bg-slate-800 text-slate-400 hover:text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm">&times;</button>
             </div>
             
-            <!-- Image Carousel / Gallery -->
-            <div id="detImagesContainer" class="flex gap-2 overflow-x-auto no-scrollbar py-1"></div>
+            <!-- Main Featured Image Viewer with Navigation Controls -->
+            <div id="detImageSliderContainer" class="relative w-full h-64 bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center group">
+                <img id="detMainImg" src="" onclick="openLightbox(currentActiveDetailImgSrc)" class="w-full h-full object-cover cursor-pointer hover:opacity-95 transition-opacity" title="Tap to enlarge">
+                
+                <!-- Navigation Arrows -->
+                <button id="detPrevBtn" onclick="slideDetailImage(-1)" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow">&lsaquo;</button>
+                <button id="detNextBtn" onclick="slideDetailImage(1)" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity shadow">&rsaquo;</button>
+            </div>
+
+            <!-- Thumbnail Selector Row -->
+            <div id="detThumbnailsContainer" class="flex gap-2 overflow-x-auto no-scrollbar py-1"></div>
 
             <!-- Make & Model positioned above value section -->
             <div>
@@ -588,10 +598,16 @@
         }
     </script>
     <script>
+        var currentDetailWatch = null;
+        var currentDetailImageIndex = 0;
+        var currentActiveDetailImgSrc = '';
+
         function openDetailModal(id) {
             history.pushState({ modal: 'detail' }, '');
             var w = watches.find(function(item) { return item.id === Number(id); });
             if (!w) return;
+            currentDetailWatch = w;
+            currentDetailImageIndex = 0;
 
             var titleStr = (w.brand || '') + (w.model ? ' ' + w.model : '');
             document.getElementById('detTitle').innerText = titleStr;
@@ -626,22 +642,66 @@
                 specSec.innerHTML = '';
             }
 
-            var imgContainer = document.getElementById('detImagesContainer');
-            if (w.images && w.images.length) {
-                imgContainer.innerHTML = w.images.map(function(img) {
-                    return '<img src="' + img + '" onclick="openLightbox(\'' + img + '\')" class="w-32 h-32 object-cover rounded-xl border border-slate-800 flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity" title="Tap to enlarge">';
-                }).join('');
-                imgContainer.classList.remove('hidden');
-            } else {
-                imgContainer.innerHTML = '';
-                imgContainer.classList.add('hidden');
-            }
+            renderDetailImages();
 
             document.getElementById('detEditBtn').onclick = function() { closeDetailModal(); editWatch(w.id); };
             document.getElementById('detShareBtn').onclick = function() { closeDetailModal(); openShareModal(w.id); };
 
             document.getElementById('detailModal').classList.remove('hidden');
             document.getElementById('detailModal').classList.add('flex');
+        }
+
+        function renderDetailImages() {
+            if (!currentDetailWatch || !currentDetailWatch.images || !currentDetailWatch.images.length) {
+                document.getElementById('detImageSliderContainer').classList.add('hidden');
+                document.getElementById('detThumbnailsContainer').classList.add('hidden');
+                document.getElementById('detImageCounter').innerText = '0/0';
+                return;
+            }
+
+            document.getElementById('detImageSliderContainer').classList.remove('hidden');
+            var imgs = currentDetailWatch.images;
+            if (currentDetailImageIndex >= imgs.length) currentDetailImageIndex = 0;
+            if (currentDetailImageIndex < 0) currentDetailImageIndex = imgs.length - 1;
+
+            currentActiveDetailImgSrc = imgs[currentDetailImageIndex];
+            document.getElementById('detMainImg').src = currentActiveDetailImgSrc;
+            document.getElementById('detImageCounter').innerText = (currentDetailImageIndex + 1) + '/' + imgs.length;
+
+            var prevBtn = document.getElementById('detPrevBtn');
+            var nextBtn = document.getElementById('detNextBtn');
+            if (imgs.length > 1) {
+                prevBtn.style.display = 'flex';
+                nextBtn.style.display = 'flex';
+            } else {
+                prevBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
+            }
+
+            var thumbContainer = document.getElementById('detThumbnailsContainer');
+            if (imgs.length > 1) {
+                thumbContainer.innerHTML = imgs.map(function(img, idx) {
+                    var activeBorder = idx === currentDetailImageIndex ? 'border-indigo-500 ring-2 ring-indigo-500/50' : 'border-slate-800 opacity-60 hover:opacity-100';
+                    return '<img src="' + img + '" onclick="setDetailImageIndex(' + idx + ')" class="w-16 h-16 object-cover rounded-xl border ' + activeBorder + ' flex-shrink-0 cursor-pointer transition-all">';
+                }).join('');
+                thumbContainer.classList.remove('hidden');
+            } else {
+                thumbContainer.innerHTML = '';
+                thumbContainer.classList.add('hidden');
+            }
+        }
+
+        function slideDetailImage(direction) {
+            if (!currentDetailWatch || !currentDetailWatch.images) return;
+            currentDetailImageIndex += direction;
+            if (currentDetailImageIndex >= currentDetailWatch.images.length) currentDetailImageIndex = 0;
+            if (currentDetailImageIndex < 0) currentDetailImageIndex = currentDetailWatch.images.length - 1;
+            renderDetailImages();
+        }
+
+        function setDetailImageIndex(idx) {
+            currentDetailImageIndex = idx;
+            renderDetailImages();
         }
 
         function closeDetailModal() {
@@ -671,10 +731,7 @@
 
         function editWatch(id) {
             var w = watches.find(function(item) { return item.id === Number(id); });
-            if (!w) {
-                console.error("Watch record not found for ID:", id);
-                return;
-            }
+            if (!w) return;
 
             if (!window.history.state || !window.history.state.modal) {
                 history.pushState({ modal: 'edit' }, '');
@@ -893,25 +950,4 @@
 
                 return '<div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg transition-all hover:border-slate-700">' +
                     imgCover +
-                    '<div class="p-4 space-y-2 cursor-pointer" onclick="openDetailModal(' + w.id + ')">' +
-                        '<div class="flex justify-between items-center gap-2">' +
-                            '<span class="text-emerald-400 font-bold text-sm">' + (w.currentValue ? '$' + Number(w.currentValue).toLocaleString() : '$0') + '</span>' +
-                            '<div class="flex flex-wrap gap-1 justify-end">' + categoryBadges + '</div>' +
-                        '</div>' +
-                        '<h3 class="text-base font-bold text-white hover:text-indigo-400">' + displayTitle + '</h3>' +
-                        (w.refNumber ? '<p class="text-xs text-indigo-300/80 font-mono">Ref: ' + w.refNumber + '</p>' : '') +
-                        '<p class="text-xs text-slate-400 leading-relaxed line-clamp-2">' + (w.description || 'No description provided.') + '</p>' +
-                    '</div>' +
-                    '<div class="flex justify-between items-center px-4 pb-4 pt-2 border-t border-slate-800/80">' +
-                        '<div class="flex gap-1.5 items-center">' +
-                            '<button onclick="editWatch(' + w.id + ')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">Edit</button>' +
-                            '<button onclick="openShareModal(' + w.id + ')" class="bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-lg border border-indigo-800/50 transition-all">Share / PDF</button>' +
-                        '</div>' +
-                        '<div>' + moveButtons + '</div>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-        }
-    </script>
-</body>
-</html>
+  
