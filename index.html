@@ -327,7 +327,6 @@
                             return w;
                         });
                     } else {
-                        // Safely fall back to default watch if storage is empty
                         watches = JSON.parse(JSON.stringify(defaultWatches));
                         saveVaultData();
                     }
@@ -340,7 +339,6 @@
                     render();
                 };
             } catch(err) {
-                console.error("IDB load exception:", err);
                 watches = JSON.parse(JSON.stringify(defaultWatches));
                 renderCategoryFilters();
                 render();
@@ -807,37 +805,20 @@
             var w = watches.find(function(item) { return item.id === Number(activeShareWatchId); });
             if (!w) return;
             var titleStr = (w.brand || '') + (w.model ? ' ' + w.model : '');
-            
-            var imagesHtml = '';
-            if (w.images && w.images.length > 0) {
-                imagesHtml = '<div style="margin-top: 20px;"><h3 style="color:#334155; font-size:14px; margin-bottom:8px;">Images</h3><div style="display: flex; flex-wrap: wrap; gap: 10px;">';
-                w.images.forEach(function(imgSrc) {
-                    imagesHtml += '<img src="' + imgSrc + '" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1;" />';
-                });
-                imagesHtml += '</div></div>';
-            }
-
-            var pdfHtml = '<div style="font-family:sans-serif; padding:24px; max-width:650px; margin:auto; color:#0f172a;">' +
-                '<h1 style="border-bottom:2px solid #cbd5e1; padding-bottom:8px; font-size:20px; color:#0f172a;">Watch Vault Record Report</h1>' +
-                '<h2 style="color:#334155; font-size:16px; margin-top:16px;">' + titleStr + '</h2>' +
+            var pdfHtml = '<div style="font-family:sans-serif; padding:20px; max-width:600px; margin:auto;">' +
+                '<h1 style="border-bottom:2px solid #cbd5e1; padding-bottom:8px; color:#0f172a;">Watch Vault Record Report</h1>' +
+                '<h2 style="color:#475569; margin-top:16px;">' + titleStr + '</h2>' +
                 '<p><strong>Reference No.:</strong> ' + (w.refNumber || 'N/A') + '</p>' +
                 '<p><strong>Categories:</strong> ' + (w.categories ? w.categories.join(', ') : 'N/A') + '</p>' +
-                '<p><strong>Estimated Value:</strong> $' + (w.currentValue ? Number(w.currentValue).toLocaleString() : 'N/A') + '</p>' +
+                '<p><strong>Estimated Value:</strong> $' + (w.currentValue || 'N/A') + '</p>' +
                 '<p><strong>Movement:</strong> ' + (w.movementType || 'N/A') + '</p>' +
-                '<p><strong>Serial Number:</strong> ' + (w.serialNumber || 'N/A') + '</p>' +
-                '<p><strong>Notes:</strong> ' + (w.description || 'None') + '</p>' +
-                imagesHtml +
-                '</div>';
-
+                '<p><strong>Serial Number:</strong> ' + (w.serialNumber || 'N/A') + '</p></div>';
             closeShareModal();
-            var win = window.open('', '', 'width=800,height=800');
-            win.document.write('<html><head><title>Watch Report - ' + titleStr + '</title></head><body>' + pdfHtml + '</body></html>');
+            var win = window.open('', '', 'width=700,height=700');
+            win.document.write('<html><head><title>Watch Report</title></head><body>' + pdfHtml + '</body></html>');
             win.document.close();
             win.focus();
-            
-            setTimeout(function() { 
-                win.print(); 
-            }, 600);
+            setTimeout(function() { win.print(); }, 500);
         }
 
         function exportBackup() {
@@ -924,4 +905,13 @@
                     '<div class="flex justify-between items-center px-4 pb-4 pt-2 border-t border-slate-800/80">' +
                         '<div class="flex gap-1.5 items-center">' +
                             '<button onclick="editWatch(' + w.id + ')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">Edit</button>' +
-                            '<button onclick="openShareModal(' + w.id + ')" class="bg-
+                            '<button onclick="openShareModal(' + w.id + ')" class="bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-lg border border-indigo-800/50 transition-all">Share / PDF</button>' +
+                        '</div>' +
+                        '<div>' + moveButtons + '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+    </script>
+</body>
+</html>
