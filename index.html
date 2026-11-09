@@ -285,7 +285,7 @@
 
         function openIDB() {
             return new Promise(function(resolve, reject) {
-                var request = indexedDB.open('WatchVaultMassiveDB', 2);
+                var request = indexedDB.open('WatchVaultMassiveDB', 3);
                 request.onupgradeneeded = function(e) {
                     var db = e.target.result;
                     if (!db.objectStoreNames.contains('vault')) {
@@ -308,7 +308,7 @@
                 var catStore = tx.objectStore('categories');
                 var catReq = catStore.get('cat_list');
                 catReq.onsuccess = function() {
-                    if (catReq.result && Array.isArray(catReq.result)) {
+                    if (catReq.result && Array.isArray(catReq.result) && catReq.result.length > 0) {
                         allCategories = catReq.result;
                     }
                 };
@@ -327,19 +327,21 @@
                             return w;
                         });
                     } else {
-                        watches = defaultWatches;
+                        // Safely fall back to default watch if storage is empty
+                        watches = JSON.parse(JSON.stringify(defaultWatches));
                         saveVaultData();
                     }
                     renderCategoryFilters();
                     render();
                 };
                 req.onerror = function() {
-                    watches = defaultWatches;
+                    watches = JSON.parse(JSON.stringify(defaultWatches));
                     renderCategoryFilters();
                     render();
                 };
             } catch(err) {
-                watches = defaultWatches;
+                console.error("IDB load exception:", err);
+                watches = JSON.parse(JSON.stringify(defaultWatches));
                 renderCategoryFilters();
                 render();
             }
