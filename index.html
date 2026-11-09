@@ -287,7 +287,7 @@
 
         function openIDB() {
             return new Promise(function(resolve, reject) {
-                var request = indexedDB.open('WatchVaultMassiveDB', 3);
+                var request = indexedDB.open('WatchVaultMassiveDB', 4);
                 request.onupgradeneeded = function(e) {
                     var db = e.target.result;
                     if (!db.objectStoreNames.contains('vault')) {
@@ -300,6 +300,24 @@
                 request.onsuccess = function(e) { resolve(e.target.result); };
                 request.onerror = function(e) { reject(e.target.error); };
             });
+        }
+
+        function fallbackLoad() {
+            var lsData = localStorage.getItem('wv_backup_store');
+            if (lsData) {
+                try {
+                    var parsed = JSON.parse(lsData);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        watches = parsed;
+                        renderCategoryFilters();
+                        render();
+                        return;
+                    }
+                } catch(e){}
+            }
+            watches = JSON.parse(JSON.stringify(defaultWatches));
+            renderCategoryFilters();
+            render();
         }
 
         async function loadVaultData() {
@@ -328,33 +346,31 @@
                             }
                             return w;
                         });
+                        localStorage.setItem('wv_backup_store', JSON.stringify(watches));
                     } else {
-                        watches = JSON.parse(JSON.stringify(defaultWatches));
+                        fallbackLoad();
                         saveVaultData();
                     }
                     renderCategoryFilters();
                     render();
                 };
                 req.onerror = function() {
-                    watches = JSON.parse(JSON.stringify(defaultWatches));
-                    renderCategoryFilters();
-                    render();
+                    fallbackLoad();
                 };
             } catch(err) {
-                watches = JSON.parse(JSON.stringify(defaultWatches));
-                renderCategoryFilters();
-                render();
+                fallbackLoad();
             }
         }
 
         async function saveVaultData() {
             try {
+                localStorage.setItem('wv_backup_store', JSON.stringify(watches));
                 var db = await openIDB();
                 var tx = db.transaction(['vault', 'categories'], 'readwrite');
                 tx.objectStore('vault').put(watches, 'watch_collection');
                 tx.objectStore('categories').put(allCategories, 'cat_list');
             } catch(err) {
-                console.error("IndexedDB save error:", err);
+                console.error("Storage save error:", err);
             }
         }
 
