@@ -319,7 +319,6 @@
                     var data = req.result;
                     if (data && Array.isArray(data) && data.length > 0) {
                         watches = data.map(function(w) {
-                            // Backward compatibility migration for older single 'category' records
                             if (!w.categories && w.category) {
                                 w.categories = [w.category];
                             } else if (!w.categories) {
@@ -419,7 +418,6 @@
                     saveVaultData();
                     renderCategoryFilters();
                     
-                    // Keep currently checked categories in modal and refresh
                     var selected = Array.from(document.querySelectorAll('input[name="watchCategory"]:checked')).map(function(cb) { return cb.value; });
                     selected.push(formatted);
                     renderCategoryCheckboxes(selected);
@@ -592,7 +590,7 @@
     <script>
         function openDetailModal(id) {
             history.pushState({ modal: 'detail' }, '');
-            var w = watches.find(function(item) { return item.id === id; });
+            var w = watches.find(function(item) { return item.id === Number(id); });
             if (!w) return;
 
             var titleStr = (w.brand || '') + (w.model ? ' ' + w.model : '');
@@ -649,7 +647,7 @@
         function closeDetailModal() {
             document.getElementById('detailModal').classList.add('hidden');
             document.getElementById('detailModal').classList.remove('flex');
-            if (window.history.state && window.history.state.modal) {
+            if (window.history.state && window.history.state.modal === 'detail') {
                 history.back();
             }
         }
@@ -666,15 +664,22 @@
             var box = document.getElementById('lightboxModal');
             box.classList.add('hidden');
             box.classList.remove('flex');
-            if (window.history.state && window.history.state.modal) {
+            if (window.history.state && window.history.state.modal === 'lightbox') {
                 history.back();
             }
         }
 
         function editWatch(id) {
-            history.pushState({ modal: 'edit' }, '');
-            var w = watches.find(function(item) { return item.id === id; });
-            if (!w) return;
+            var w = watches.find(function(item) { return item.id === Number(id); });
+            if (!w) {
+                console.error("Watch record not found for ID:", id);
+                return;
+            }
+
+            if (!window.history.state || !window.history.state.modal) {
+                history.pushState({ modal: 'edit' }, '');
+            }
+
             document.getElementById('modalTitle').innerText = 'Edit Watch';
             document.getElementById('watchId').value = w.id;
             document.getElementById('brand').value = w.brand || '';
@@ -700,7 +705,6 @@
             currentTempImages = w.images ? [...w.images] : [];
             renderTempImagePreviews();
             
-            // Show delete button inside edit modal
             document.getElementById('modalDeleteBtn').classList.remove('hidden');
 
             document.getElementById('watchModal').classList.remove('hidden');
@@ -719,7 +723,7 @@
         }
 
         async function moveWatch(id, direction) {
-            var index = watches.findIndex(function(w) { return w.id === id; });
+            var index = watches.findIndex(function(w) { return w.id === Number(id); });
             if (index === -1) return;
             
             var targetIndex = index + direction;
@@ -734,8 +738,8 @@
 
         function openShareModal(id) {
             history.pushState({ modal: 'share' }, '');
-            activeShareWatchId = id;
-            var w = watches.find(function(item) { return item.id === id; });
+            activeShareWatchId = Number(id);
+            var w = watches.find(function(item) { return item.id === Number(id); });
             if (!w) return;
             var box = document.getElementById('shareOptionsBox');
             var html = '';
@@ -761,13 +765,13 @@
         function closeShareModal() {
             document.getElementById('shareModal').classList.add('hidden');
             document.getElementById('shareModal').classList.remove('flex');
-            if (window.history.state && window.history.state.modal) {
+            if (window.history.state && window.history.state.modal === 'share') {
                 history.back();
             }
         }
 
         function buildShareTextPayload() {
-            var w = watches.find(function(item) { return item.id === activeShareWatchId; });
+            var w = watches.find(function(item) { return item.id === Number(activeShareWatchId); });
             if (!w) return '';
             var txt = "⌚ Watch Details Report\n";
             if (document.getElementById('sb_brand') && document.getElementById('sb_brand').checked) txt += "Watch: " + (w.brand || '') + (w.model ? ' ' + w.model : '') + "\n";
@@ -781,7 +785,7 @@
         }
 
         function executeShareText() {
-            var w = watches.find(function(item) { return item.id === activeShareWatchId; });
+            var w = watches.find(function(item) { return item.id === Number(activeShareWatchId); });
             var txt = buildShareTextPayload();
             closeShareModal();
             var titleStr = (w.brand || '') + (w.model ? ' ' + w.model : '');
@@ -790,7 +794,7 @@
         }
 
         function executeEmailReport() {
-            var w = watches.find(function(item) { return item.id === activeShareWatchId; });
+            var w = watches.find(function(item) { return item.id === Number(activeShareWatchId); });
             var txt = buildShareTextPayload();
             closeShareModal();
             var titleStr = (w.brand || '') + (w.model ? ' ' + w.model : '');
@@ -798,7 +802,7 @@
         }
 
         function executeGeneratePDF() {
-            var w = watches.find(function(item) { return item.id === activeShareWatchId; });
+            var w = watches.find(function(item) { return item.id === Number(activeShareWatchId); });
             if (!w) return;
             var titleStr = (w.brand || '') + (w.model ? ' ' + w.model : '');
             var pdfHtml = '<div style="font-family:sans-serif; padding:20px; max-width:600px; margin:auto;">' +
@@ -834,7 +838,6 @@
             reader.onload = async function(evt) {
                 try {
                     var parsed = JSON.parse(evt.target.result);
-                    // Support both legacy array backups and new object backups
                     var importedWatches = Array.isArray(parsed) ? parsed : parsed.watches;
                     var importedCats = parsed.categories;
 
@@ -856,7 +859,6 @@
         }
 
         function render() {
-            // Update total collection value in header drawing data exclusively from current estimated values
             var totalVal = watches.reduce(function(sum, w) {
                 return sum + (Number(w.currentValue) || 0);
             }, 0);
