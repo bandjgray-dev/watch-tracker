@@ -14,6 +14,8 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2972/2972531.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2pdf Library for Reliable Mobile PDF Generation with Images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -235,7 +237,7 @@
             <div class="flex flex-col gap-2 pt-2">
                 <button type="button" onclick="executeShareText()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs py-2.5 rounded-xl">Share Text (SMS / App)</button>
                 <button type="button" onclick="executeEmailReport()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2.5 rounded-xl">Email Details</button>
-                <button type="button" onclick="executeGeneratePDF()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs py-2.5 rounded-xl">Download PDF Report</button>
+                <button type="button" onclick="executeGeneratePDF()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs py-2.5 rounded-xl">Download PDF Report (with Images)</button>
                 <button type="button" onclick="closeShareModal()" class="w-full bg-slate-950 text-slate-400 font-semibold text-xs py-2 rounded-xl mt-1">Cancel</button>
             </div>
         </div>
@@ -801,24 +803,49 @@
             window.location.href = "mailto:?subject=" + encodeURIComponent("Watch Specification: " + titleStr) + "&body=" + encodeURIComponent(txt);
         }
 
+        // Reliable html2pdf Generator with Images Attached
         function executeGeneratePDF() {
             var w = watches.find(function(item) { return item.id === Number(activeShareWatchId); });
             if (!w) return;
             var titleStr = (w.brand || '') + (w.model ? ' ' + w.model : '');
-            var pdfHtml = '<div style="font-family:sans-serif; padding:20px; max-width:600px; margin:auto;">' +
-                '<h1 style="border-bottom:2px solid #cbd5e1; padding-bottom:8px; color:#0f172a;">Watch Vault Record Report</h1>' +
-                '<h2 style="color:#475569; margin-top:16px;">' + titleStr + '</h2>' +
+
+            var container = document.createElement('div');
+            container.style.padding = '20px';
+            container.style.fontFamily = 'sans-serif';
+            container.style.color = '#0f172a';
+            container.style.background = '#ffffff';
+            container.style.maxWidth = '600px';
+
+            var imagesHtml = '';
+            if (w.images && w.images.length > 0) {
+                imagesHtml = '<div style="margin-top: 20px;"><h3 style="font-size: 14px; color: #334155; margin-bottom: 8px;">Watch Images</h3><div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+                w.images.forEach(function(imgSrc) {
+                    imagesHtml += '<img src="' + imgSrc + '" style="width: 100px; height: 100px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;" crossorigin="anonymous"/>';
+                });
+                imagesHtml += '</div></div>';
+            }
+
+            container.innerHTML = '<h1 style="font-size: 20px; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; margin-bottom: 12px;">Watch Vault Record Report</h1>' +
+                '<h2 style="font-size: 16px; color: #475569; margin-bottom: 12px;">' + titleStr + '</h2>' +
                 '<p><strong>Reference No.:</strong> ' + (w.refNumber || 'N/A') + '</p>' +
                 '<p><strong>Categories:</strong> ' + (w.categories ? w.categories.join(', ') : 'N/A') + '</p>' +
-                '<p><strong>Estimated Value:</strong> $' + (w.currentValue || 'N/A') + '</p>' +
+                '<p><strong>Estimated Value:</strong> $' + (w.currentValue ? Number(w.currentValue).toLocaleString() : 'N/A') + '</p>' +
                 '<p><strong>Movement:</strong> ' + (w.movementType || 'N/A') + '</p>' +
-                '<p><strong>Serial Number:</strong> ' + (w.serialNumber || 'N/A') + '</p></div>';
+                '<p><strong>Serial Number:</strong> ' + (w.serialNumber || 'N/A') + '</p>' +
+                '<p><strong>Notes:</strong> ' + (w.description || 'None') + '</p>' +
+                imagesHtml;
+
             closeShareModal();
-            var win = window.open('', '', 'width=700,height=700');
-            win.document.write('<html><head><title>Watch Report</title></head><body>' + pdfHtml + '</body></html>');
-            win.document.close();
-            win.focus();
-            setTimeout(function() { win.print(); }, 500);
+
+            var opt = {
+                margin:       10,
+                filename:     (titleStr.replace(/[^a-z0-9]/gi, '_').toLowerCase()) + '_report.pdf',
+                image:        { type: 'jpeg', quality: 0.9 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().from(container).set(opt).save();
         }
 
         function exportBackup() {
@@ -903,15 +930,4 @@
                         '<p class="text-xs text-slate-400 leading-relaxed line-clamp-2">' + (w.description || 'No description provided.') + '</p>' +
                     '</div>' +
                     '<div class="flex justify-between items-center px-4 pb-4 pt-2 border-t border-slate-800/80">' +
-                        '<div class="flex gap-1.5 items-center">' +
-                            '<button onclick="editWatch(' + w.id + ')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all">Edit</button>' +
-                            '<button onclick="openShareModal(' + w.id + ')" class="bg-indigo-900/40 hover:bg-indigo-900/60 text-indigo-300 text-xs font-semibold px-3 py-1.5 rounded-lg border border-indigo-800/50 transition-all">Share / PDF</button>' +
-                        '</div>' +
-                        '<div>' + moveButtons + '</div>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-        }
-    </script>
-</body>
-</html>
+  
